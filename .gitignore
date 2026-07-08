@@ -1,0 +1,10 @@
+# All arcgis pro related files and folders
+gis/
+
+# virtual environment
+.venv/
+
+# Documentatie
+documentatie/
+
+__pycache__/

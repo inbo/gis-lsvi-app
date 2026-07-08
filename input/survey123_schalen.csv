@@ -1,0 +1,61 @@
+﻿list_name;name;label
+Standaard;afw_0perc;Afw, 0%
+Standaard;spor_lt_5perc;Spor, <5%
+Standaard;rare_lt_5perc;Rare, <5%
+Standaard;occ_lt_5perc;Occ, <5%
+Standaard;freq_lt_5perc;Freq, <5%
+Standaard;5_10perc;5-10%
+Standaard;10_20perc;10-20%
+Standaard;20_30perc;20-30%
+Standaard;30_40perc;30-40%
+Standaard;40_50perc;40-50%
+Standaard;50_60perc;50-60%
+Standaard;60_70perc;60-70%
+Standaard;70_80perc;70-80%
+Standaard;80_90perc;80-90%
+Standaard;90_100perc;90-100%
+Dominantie50;geen_enkele_soort_bedekt_ge_50perc;geen enkele soort bedekt ≥ 50%
+Dominantie50;minstens_1_soort_bedekt_meer_dan_50perc;minstens 1 soort bedekt meer dan 50%
+Ja_Nee;ja;Ja
+Ja_Nee;nee;Nee
+Codominant;ge_codominant;≥ codominant
+Codominant;lt_codominant;< codominant
+Kwaliteit;zeer_goed_zeker_geen_soorten_over_het_hoofd_gezien;Zeer goed (Zeker geen soorten over het hoofd gezien)
+Kwaliteit;goed_misschien_soorten_over_het_hoofd_gezien;Goed (Misschien soorten over het hoofd gezien)
+Kwaliteit;matig_waarschijnlijk_soorten_over_het_hoofd_gezien;Matig (Waarschijnlijk soorten over het hoofd gezien)
+Kwaliteit;zwak_zeker_soorten_over_het_hoofd_gezien;Zwak (Zeker soorten over het hoofd gezien)
+Vlek1;grootste_vegetatievlek_gt_10_m;Grootste vegetatievlek > 10 m²
+Vlek1;grootste_vegetatievlek_le_10_m;Grootste vegetatievlek ≤ 10 m²
+Vlek2;ge_10_m;≥ 10 m²
+Vlek2;1_10_m;1-10 m²
+Vlek2;le_1_m_of_ge_soleerde_exemplaren_van_sleutelsoorten;≤ 1 m² of geïsoleerde exemplaren van sleutelsoorten
+Percentage;5perc;5%
+Percentage;10perc;10%
+Percentage;5perc;5%
+Percentage;15perc;15%
+Percentage;20perc;20%
+Percentage;25perc;25%
+Percentage;30perc;30%
+Percentage;40perc;40%
+Percentage;50perc;50%
+Percentage;60perc;60%
+Percentage;70perc;70%
+Percentage;75perc;75%
+Percentage;80perc;80%
+Percentage;90perc;90%
+Percentage;100perc;100%
+LSVI;s;s
+LSVI;r;r
+LSVI;o;o
+LSVI;f;f
+LSVI;5_10perc;5-10%
+LSVI;10_20perc;10-20%
+LSVI;20_30perc;20-30%
+LSVI;30_40perc;30-40%
+LSVI;40_50perc;40-50%
+LSVI;50_60perc;50-60%
+LSVI;60_70perc;60-70%
+LSVI;70_80perc;70-80%
+LSVI;80_90perc;80-90%
+LSVI;90_95perc;90-95%
+LSVI;95_100perc;95-100%

@@ -1,0 +1,18 @@
+// Force the values to uppercase immediately
+var bwk = $feature.bwk_id;
+var hab1 = Lower($feature.HAB1);
+var hab2 = Lower($feature.HAB2);
+var hab3 = Lower($feature.HAB3);
+var hab4 = Lower($feature.HAB4);
+var hab5 = Lower($feature.HAB5);
+var phab1 = Lower($feature.PHAB1);
+var phab2 = Lower($feature.PHAB2);
+var phab3 = Lower($feature.PHAB3);
+var phab4 = Lower($feature.PHAB4);
+var phab5 = Lower($feature.PHAB5);
+
+// Use id of form item in AGOL
+var baseUrl = "arcgis-survey123://?itemID=d26e34eb851b4abbbb2ac7f7c1b14af2";
+var params = `&field:bwk_id=${bwk}&field:hab1=${hab1}&field:hab2=${hab2}&field:hab3=${hab3}&field:hab4=${hab4}&field:hab5=${hab5}&field:phab1=${phab1}&field:phab2=${phab2}&field:phab3=${phab3}&field:phab4=${phab4}&field:phab5=${phab5}`;
+
+return baseUrl + params;
