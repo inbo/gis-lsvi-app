@@ -103,7 +103,7 @@ def get_habitat_hint(habitattype_code):
     van de parent-habitat indien deze bestaat.
     """
     # hardcode lookup habitattypes for now joost
-    df_habitattypes = pd.read_sql_table('Habitattype', 'sqlite:///../input/LSVIHabitatTypes.sqlite')
+    df_habitattypes = pd.read_sql_table('Habitattype', 'sqlite:///./input/LSVIHabitatTypes.sqlite')
 
     # 1. Zoek het habitattype op basis van de Code
     match = df_habitattypes[df_habitattypes['Code'] == habitattype_code]
@@ -224,6 +224,9 @@ def get_question_settings(row):
         vraag_appearance = "minimal" 
     elif 'meting' in type_var and type_var != 'meting_perc':
         answer_type = "decimal" #to find example and implement joost
+        vraag_appearance = "minimal" 
+    elif 'scoresom' in type_var and type_var != 'meting_perc':
+        answer_type = "integer" #to find example and implement joost
         vraag_appearance = "minimal" 
     else:
         answer_type = "text" # Fallback
