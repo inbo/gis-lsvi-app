@@ -5,6 +5,7 @@ import shutil
 from sys import platform
 import subprocess
 import os
+import arcgis
 
 def load_keepass_credentials(db_path, entry_name, key_file=None, cli_path=None):
     """
@@ -226,3 +227,57 @@ def get_question_settings(row):
         vraag_appearance = "minimal" 
         print(f"Waarschuwing: Onbekend AnalyseVariabele type '{type_var}' voor VoorwaardeID {row['VoorwaardeID']}. Fallback naar 'text' vraag.") 
     return answer_type, vraag_appearance    
+
+def get_survey_id_by_name(gis, survey_name: str) -> str:
+    """Fetches the ID of a Survey123 survey by its title.
+
+    Args:
+        gis: The authenticated GIS connection object.
+        survey_name: The exact title of the survey to find.
+
+    Returns:
+        str: The survey ID string.
+
+    Raises:
+        ValueError: If no survey matches the provided title.
+    """
+    # Initialize the Survey Manager
+    survey_manager = arcgis.apps.survey123.SurveyManager(gis)
+    surveys = survey_manager.surveys
+    
+    # Safely find matches using the .get() method
+    matched_surveys = [s for s in surveys if s.properties.get('title') == survey_name]
+    
+    if matched_surveys:
+        # Return the ID of the first matching survey found
+        return matched_surveys[0].properties.get('id')
+    
+    # If nothing matches, gather available titles to provide a helpful error message
+    available_titles = [s.properties.get('title') for s in surveys if s.properties.get('title')]
+    raise ValueError(
+        f"Survey '{survey_name}' not found in the connected portal.\n"
+        f"Available surveys: {available_titles}"
+    )
+
+def browse_folders_for_survey(gis, old_survey_id: str) -> str:
+    """Finds the name of the folder containing a specific survey by browsing item lists.
+
+    Args:
+        gis: The authenticated GIS connection object.
+        old_survey_id: The unique ID of the survey form item.
+
+    Returns:
+        tuple: The name and ID of the folder where the survey resides, or ('Root', None) if not found in subfolders.
+    """
+    form_item = gis.content.get(old_survey_id)
+    if not form_item:
+        raise ValueError(f"Survey item with ID {old_survey_id} could not be found.")
+        
+    user = gis.users.get(form_item.owner)
+    
+    for f in user.folders:
+        list = user.items(folder=f)
+        for i in list:
+            if i.id == old_survey_id:
+                return f.name, f._folder_id
+    return None, None
