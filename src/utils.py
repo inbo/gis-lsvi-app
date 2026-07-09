@@ -211,7 +211,7 @@ def get_question_settings(row):
 
     if type_var == 'lsvi':
         answer_type = "select_one LSVI"  # Verwijst naar de 'LSVI' lijst in survey123_schalen.csv
-        vraag_appearance = "compact-15 horizontal"  # Verticaal met radio buttons
+        vraag_appearance = "compact horizontal"  # Verticaal met radio buttons
     elif 'bedekking' in type_var:
         answer_type = "select_one Standaard"  # Verwijst naar de 'Standaard' lijst in survey123_schalen.csv
         vraag_appearance = "compact horizontal"  # Optioneel: maakt de opties naast elkaar in plaats van onder elkaar
@@ -221,7 +221,10 @@ def get_question_settings(row):
         vraag_appearance = "horizontal compact"
     elif type_var == 'meting_perc':
         answer_type = "select_one Percentage" #to find example and implement joost
-        vraag_appearance = "minimal"  
+        vraag_appearance = "minimal" 
+    elif 'meting' in type_var and type_var != 'meting_perc':
+        answer_type = "decimal" #to find example and implement joost
+        vraag_appearance = "minimal" 
     else:
         answer_type = "text" # Fallback
         vraag_appearance = "minimal" 
