@@ -199,7 +199,7 @@ def get_species_hint(taxongroep_id, df_soorten):
             lijn = f"• <i>{wet_naam}</i>"
         else:
             # Nederlandse naam met wetenschappelijke naam tussen haakjes
-            lijn = f"• {ned_naam} (<i>{wet_naam}</i>)"
+            lijn = f"• {ned_naam}" # (<i>{wet_naam}</i>)" removed scientific name from hint to reduce clutter
             
         species_lines.append(lijn)
         
@@ -211,10 +211,10 @@ def get_question_settings(row):
 
     if type_var == 'lsvi':
         answer_type = "select_one LSVI"  # Verwijst naar de 'LSVI' lijst in survey123_schalen.csv
-        vraag_appearance = ""  # Verticaal met radio buttons
+        vraag_appearance = "compact-15 horizontal"  # Verticaal met radio buttons
     elif 'bedekking' in type_var:
         answer_type = "select_one Standaard"  # Verwijst naar de 'Standaard' lijst in survey123_schalen.csv
-        vraag_appearance = "minimal autocomplete"  # Optioneel: maakt de opties naast elkaar in plaats van onder elkaar
+        vraag_appearance = "compact horizontal"  # Optioneel: maakt de opties naast elkaar in plaats van onder elkaar
     elif type_var == 'aantal' and pd.notna(row['TaxongroepId']): # als type vraag 'Aantal' is en Taxongroep is bekend kunnen we soortenlijst koppen aan multiple choice vraag
         tax_id = int(row['TaxongroepId'])
         answer_type = f"select_multiple taxa_{tax_id}"
