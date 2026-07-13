@@ -6,6 +6,7 @@ from sys import platform
 import subprocess
 import os
 import arcgis
+import sqlite3
 
 def load_keepass_credentials(db_path, entry_name, key_file=None, cli_path=None):
     """
@@ -97,15 +98,20 @@ def clean_name(hab_text):
     # Plak ze weer aan elkaar met exact één underscore (of geen, als er maar 1 deel is)
     return "_".join(limited_parts)
 
-def get_habitat_hint(habitattype_code):
+def get_habitat_hint(habitattype_code, db_path: str):
     """
     Genereert een dynamische hint voor een habitattype, met vermelding
     van de parent-habitat indien deze bestaat.
     """
     # hardcode lookup habitattypes for now joost
-    df_habitattypes = pd.read_sql_table('Habitattype', 'sqlite:///./input/LSVIHabitatTypes.sqlite')
+    with sqlite3.connect(db_path) as conn:
+        # We lezen alleen de specifieke rij die we nodig hebben, dat is veel sneller!
+        query = "SELECT * FROM Habitattype WHERE Code = ?"
+        df_habitattypes = pd.read_sql_query(
+            query, conn, params=(str(habitattype_code),)
+        )
 
-    # 1. Zoek het habitattype op basis van de Code
+    # Zoek het habitattype op basis van de Code
     match = df_habitattypes[df_habitattypes['Code'] == habitattype_code]
     
     # Fallback als de code niet in de tabel zit
@@ -287,3 +293,113 @@ def browse_folders_for_survey(gis, old_survey_id: str) -> str:
             if i.id == old_survey_id:
                 return f.name, f._folder_id
     return None, None
+
+def voeg_lsvi_beschrijving_toe(
+    df_vereisten: pd.DataFrame,
+    sqlite_path: str,
+    col_habitattype: str = "Habitattype",
+    col_beoordeling_id: str = "BeoordelingID",
+    col_taxongroep_id: str = "TaxongroepId",
+) -> pd.DataFrame:
+    """Voegt de LSVI-beschrijving toe aan de invoervereisten datatabel.
+
+    Deze functie haalt de relevante beschrijvingen op uit de opgegeven
+    SQLite-databank op basis van de combinatie van Habitattype (code),
+    BeoordelingID en TaxongroepId. De beschrijving wordt toegevoegd als een
+    nieuwe kolom 'Beschrijving'.
+
+    Er wordt rekening gehouden met de volgende fallback-logica voor elke rij:
+    - Als 'Beschrijving' ingevuld is, wordt deze gebruikt.
+    - Als 'Beschrijving' leeg is, wordt 'Beschrijving_naSoorten' gebruikt.
+    - Als 'Beschrijving_naSoorten' leeg is, wordt 'Beschrijving' gebruikt.
+    - Als beide leeg zijn, blijft de waarde voor die rij leeg (None).
+
+    Args:
+        df_vereisten (pd.DataFrame): Het DataFrame met de invoervereisten (de
+          vragenlijst).
+        sqlite_path (str): Het bestandspad naar de LSVI SQLite-databank.
+        col_habitattype (str, optional): De kolomnaam voor het habitattype in
+          df_invoer. Defaults to 'Habitattype'.
+        col_beoordeling_id (str, optional): De kolomnaam voor het BeoordelingID
+          in df_invoer. Defaults to 'BeoordelingID'.
+        col_taxongroep_id (str, optional): De kolomnaam voor het TaxongroepId in
+          df_invoer. Defaults to 'TaxongroepId'.
+
+    Returns:
+        pd.DataFrame: Een nieuw DataFrame (kopie) inclusief de kolom
+        'Beschrijving'.
+
+    Raises:
+        KeyError: Als een van de opgegeven kolomnamen niet bestaat in df_invoer.
+    """
+    # 1. Maak een kopie om het originele DataFrame niet ongewenst te wijzigen
+    df = df_vereisten.copy()
+
+    # Valideer of de gevraagde kolommen daadwerkelijk bestaan
+    for col in [col_habitattype, col_beoordeling_id, col_taxongroep_id]:
+        if col not in df.columns:
+            raise KeyError(
+                f"Kolom '{col}' werd niet gevonden in het invoer DataFrame."
+            )
+
+    # 3. Maak verbinding met de SQLite database en haal de volledige tabel op
+    conn = sqlite3.connect(sqlite_path)
+
+    query = """
+    SELECT 
+        ht.Code AS Habitatsubtype,
+        b.Id AS BeoordelingID,
+        IFNULL(ih.TaxongroepId, -1) AS TaxongroepId,
+        ih.Beschrijving AS Beschrijving, 
+        ih.Beschrijving_naSoorten AS Beschrijving_naSoorten
+    FROM Indicator_habitat ih
+    INNER JOIN Habitattype ht ON ih.HabitattypeId = ht.Id
+    INNER JOIN Indicator_beoordeling ib ON ih.IndicatorId = ib.IndicatorID
+    INNER JOIN Beoordeling b ON ib.Id = b.Indicator_beoordelingID
+    WHERE 
+        (LENGTH(ih.Beschrijving) > 0 OR LENGTH(ih.Beschrijving_naSoorten) > 0)
+        AND
+        ih.VersieId = 3
+    """
+
+    df_db = pd.read_sql_query(query, conn)
+    conn.close()
+
+    # 4. Schoon de database strings op en converteer types
+    df_db["Habitatsubtype"] = (
+        df_db["Habitatsubtype"].astype(str).str.strip()
+    )
+    df_db["BeoordelingID"] = df_db["BeoordelingID"].astype(int)
+    df_db["TaxongroepId"] = df_db["TaxongroepId"].astype(int)
+
+    for col_name in ["Beschrijving", "Beschrijving_naSoorten"]:
+        # Strip whitespaces en zet echte lege strings ("") om naar None/NaN
+        df_db[col_name] = df_db[col_name].astype(str).str.strip()
+        df_db[col_name] = df_db[col_name].replace(
+            r"^\s*$", None, regex=True
+        )  # Vangt ook verborgen spaties op
+
+    # 5. Pas de exacte fallback-logica toe via .fillna()
+    # - Als DB_Beschrijving gevuld is -> kies DB_Beschrijving
+    # - Als DB_Beschrijving leeg is -> kies DB_Beschrijving_naSoorten
+    # - Als beide leeg zijn -> resultaat is None/NaN
+    df_db["Beschrijving"] = df_db["Beschrijving"].fillna(
+        df_db["Beschrijving_naSoorten"]
+    )
+
+    # 6. Breng de data samen middels een Left Join (merge)
+    df_merged = pd.merge(
+        df,
+        df_db[
+            [
+                "Habitatsubtype",
+                "BeoordelingID",
+                "TaxongroepId",
+                "Beschrijving",
+            ]
+        ],
+        on=["Habitatsubtype", "BeoordelingID", "TaxongroepId"],
+        how="left",
+    )
+
+    return df_merged

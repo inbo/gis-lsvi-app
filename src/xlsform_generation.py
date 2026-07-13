@@ -16,6 +16,8 @@ if parent_dir not in sys.path:
 
 from src import utils
 
+SQLITE_PATH = "../input/LSVIHabitatTypes.sqlite"
+
 
 def generate_xlsform(
         habitat_filter: List[str] = None, 
@@ -46,6 +48,9 @@ def generate_xlsform(
     # df_vereisten = df_vereisten[df_vereisten['Habitatsubtype'].astype(str).str.startswith(('1', '2','3', '4', '5'))]
     if habitat_filter is not None:
         df_vereisten = df_vereisten[df_vereisten['Habitatsubtype'].astype(str).str.startswith(tuple(habitat_filter))]
+
+    # Haal beschrijving op uit LSVI databank (mimic functie geefInfoHabitatfiche)
+    df_vereisten = utils.voeg_lsvi_beschrijving_toe(df_vereisten, sqlite_path=SQLITE_PATH)
 
     print(df_vereisten.shape)
 
@@ -117,7 +122,7 @@ def generate_xlsform(
         "form_id": f"lsvi_app_{last_part}",
         "form_title": form_title,
         "style": "pages",
-        "default_language": "nl" 
+        "default_language": "Dutch (nl)"
     }])
 
     ###########################
@@ -242,8 +247,6 @@ def generate_xlsform(
         "name": "habitat_keuze",
         "label": "Welk habitat(sub)type wil je inventariseren?",
         "relevant": "",  # Altijd zichtbaar
-        "hint": "Eenvoudige tekst om feature te testen.",
-        "guidance_hint": "Eenvoudige tekst om feature te testen.",
         "appearance": "horizontal", #blank defaults to radio buttons instead of "minimal autocomplete",
         "choice_filter": "string(name) = string(${hab1}) or string(name) = string(${hab2}) or string(name) = string(${hab3}) or string(name) = string(${hab4}) or string(name) = string(${hab5})" # This makes sure we only get to choose habitats that were mapped in BWK field app for this polygon.
     })
@@ -261,7 +264,7 @@ def generate_xlsform(
             "type": "begin group",
             "name": f"grp_habitat_{hab_clean}",
             "label": f"Habitat {hab_clean.upper()}",
-            "hint": utils.get_habitat_hint(hab),
+            # "hint": utils.get_habitat_hint(hab),
             # "guidance_hint": get_habitat_hint(hab),   # Dynamische hint genereren op basis van de habitattype code
             "relevant": f"selected(string(${{habitat_keuze}}), '{hab_clean}')",   # De groep erft de relevantie van het repeat blok. Dit mag leeg zijn als we repeats gebruiken.
             "appearance": "w1 compact field-list" # Zorgt dat het als 1 pagina toont in de app
@@ -279,6 +282,9 @@ def generate_xlsform(
                 # Do usual processing
                 answer_type, vraag_appearance = utils.get_question_settings(row)
 
+                # Controleer of er een beschrijving is
+                heeft_beschrijving = pd.notna(row['Beschrijving']) and str(row['Beschrijving']).strip() != ""
+
                 # Vraag toevoegen
                 # Label van de vraag is combinatie van Voorwaarde + Indicator + Beoordeling(en eventueel Eenheid)
                 # Add soortenlijst als hint 
@@ -290,20 +296,73 @@ def generate_xlsform(
                     "appearance": vraag_appearance
                 })
 
-            # Block below
+                # Toevoegen beschrijving indicator
+                if pd.notna(row['Beschrijving']) and str(row['Beschrijving']).strip() != "":
+                
+                    # Start de inklapbare groep
+                    survey_list.append({
+                        "type": "begin group",
+                        "name": f"besch_{vraag_naam}",
+                        "label": "ℹ️ Bekijk indicator beschrijving", # De tekst op de klikbare balk
+                        "relevant": "",
+                        "appearance": "compact"  # <--- Dit zorgt ervoor dat hij standaard ingeklapt is!
+                    })
+
+                    # Voeg de note toe met de VOLLEDIGE beschrijving
+                    survey_list.append({
+                        "type": "note",
+                        "name": f"note_besch_{vraag_naam}",
+                        "label": str(row['Beschrijving']).strip(), # De volledige, onafgekapte tekst
+                        "relevant": "",
+                        "appearance": "",
+                        "bind::esri:fieldType": "null" # Zorgt ervoor dat dit geen lege GIS-kolom wordt
+                    })
+
+                    # Sluit de groep netjes af
+                    survey_list.append({
+                        "type": "end group", "name": f"besch_{vraag_naam}", "label": np.nan, "relevant": "", "appearance": ""
+                    })
+
             elif row['Type_vraag'].lower() == 'matrixvraag':
-        
-                # 1. Start subgroep voor matrix met de table-list layout
+                vraag_naam = f"{row['vraag_id']}"
+                
+                # 1. Start de matrix hoofdgroep met 'field-list' (verticale stapeling over 100% breedte)
                 survey_list.append({
                     "type": "begin group",
                     "name": f"{vraag_naam}_matrix",
-                    "label": utils.get_question_label(row), # Genereert jouw mooie HTML label
+                    "label": utils.get_question_label(row), # Jouw mooie HTML hoofdlabel
                     "hint": "Scoor elk van de onderstaande onderdelen volgens de LSVI-schaal.",
                     "relevant": "",
-                    "appearance": "table-list" # <-- GEWIJZIGD: Verander 'w2 grid-layout' naar 'table-list'
+                    "appearance": "field-list" # <-- GEWIJZIGD: field-list stapt af van het krappe grid
                 })
 
-                # Welke groep moeten we bevragen in matrix?
+                # 2. VOEG DE INKLAPBARE INDICATOR-BESCHRIJVING TOE (Bovenin de groep)
+                if pd.notna(row['Beschrijving']) and str(row['Beschrijving']).strip() != "":
+                    # Start de inklapbare subgroep
+                    survey_list.append({
+                        "type": "begin group",
+                        "name": f"grp_besch_{vraag_naam}",
+                        "label": "ℹ️ Bekijk indicator beschrijving", 
+                        "relevant": "",
+                        "appearance": "compact"  # Standaard netjes ingeklapt
+                    })
+
+                    # De note met de volledige tekst
+                    survey_list.append({
+                        "type": "note",
+                        "name": f"note_besch_{vraag_naam}",
+                        "label": str(row['Beschrijving']).strip(),
+                        "relevant": "",
+                        "appearance": "",
+                        "bind::esri:fieldType": "null"
+                    })
+
+                    # Sluit de inklapbare subgroep
+                    survey_list.append({
+                        "type": "end group", "name": f"grp_besch_{vraag_naam}", "label": "", "relevant": "", "appearance": ""
+                    })
+
+                # 3. Welke groep moeten we bevragen? (Sleutelsoorten of vaste mapping)
                 groep_naam = str(row['Groepen']).strip().lower()
                 items_te_scoren = []
                 
@@ -319,96 +378,28 @@ def generate_xlsform(
                 if not items_te_scoren:
                     print(f"Waarschuwing: Geen matrix items gevonden voor groep '{row['Groepen']}' bij vraag {vraag_naam}")
 
-                # 2. Genereer de matrix rijen
-                # Binnen een 'table-list' groep hoef je GEEN 'notes' toe te voegen voor de labels!
+                # 4. Genereer de rijen over de VOLLEDIGE breedte van het scherm
                 for index, item in enumerate(items_te_scoren):
                     uniek_veld_name = f"{vraag_naam}_matrix_{index}"
-                    uniek_veld_name = uniek_veld_name[0:27] # Beperkt tot 32 tekens max voor GIS/Excel kolommen
+                    uniek_veld_name = uniek_veld_name[0:27] # Beperkt tot 32 tekens max
 
-                    # GEWIJZIGD: Geen aparte 'note' meer toevoegen. 
-                    # We voegen direct de 'select_one' vraag toe. Het label van deze vraag 
-                    # wordt door Survey123 automatisch als de linker rijkop geplaatst.
+                    # OPLOSSING VOOR SMALLE SCHERMEN:
+                    # - We verwijderen de aparte 'note' rij volledig.
+                    # - De soortnaam/stadium-naam wordt DIRECT het 'label' van de select_one vraag.
+                    # - We halen 'w1' weg. 'appearance: minimal' zorgt nu voor een dropdown
+                    #   die de volle 100% breedte van het scherm gebruikt.
                     survey_list.append({
-                        "type": "select_one LSVI", # Zorg dat al deze vragen exact dezelfde keuzelijst delen!
+                        "type": "select_one LSVI",
                         "name": uniek_veld_name,
-                        "label": f"{item.capitalize()}", # <-- GEWIJZIGD: De itemnaam is nu direct het label van de keuzevraag
+                        "label": f"{item.capitalize()}", # De soortnaam staat nu groot en leesbaar BOVEN de dropdown
                         "relevant": "",
-                        "appearance": "" # <-- GEWIJZIGD: Verwijder 'minimal' en 'w1'. table-list regelt de styling.
+                        "appearance": "minimal" # Volledige breedte dropdown, perfect voor mobiel
                     })
 
-                # 3. Sluit de matrix sub-groep netjes af
+                # 5. Sluit de matrix hoofdgroep netjes af
                 survey_list.append({
                     "type": "end group", "name": "", "label": "", "relevant": "", "appearance": ""
                 })
-            
-            # elif row['Type_vraag'].lower() == 'matrixvraag':
-            #     # Moet iets doen voor alle groepen? Zie groep kolom? 
-                
-            #     # Start subgroep voor matrix met grid layout
-            #     survey_list.append({
-            #         "type": "begin group",
-            #         "name": f"{vraag_naam}_matrix",
-            #         "label": utils.get_question_label(row), # Genereert jouw mooie HTML label
-            #         "hint": "Scoor elk van de onderstaande onderdelen volgens de LSVI-schaal.",
-            #         "relevant": "",
-            #         "appearance": "w2 grid-layout" # Activeert het 2-koloms rastersysteem
-            #     })
-
-            #     # Welke groep moeten we bevragen in matrix? Sleutelsoorten of andere categorie? 
-            #     groep_naam = str(row['Groepen']).strip().lower()
-            #     items_te_scoren = []
-                
-            #     if 'sleutelsoorten' in groep_naam:
-            #         # CASE A: Haal de specifieke soorten op uit df_soorten op basis van TaxongroepId
-            #         tax_id = row['TaxongroepId']
-            #         if pd.notna(tax_id):
-            #             df_sub_soorten = df_soorten[df_soorten['TaxongroepId'] == int(tax_id)]
-            #             # Pak 'NedNaam', tenzij NaN, dan pak 'WetNaam'
-            #             items_te_scoren = df_sub_soorten['NedNaam'].fillna(df_sub_soorten['WetNaam']).tolist()
-
-            #     else:
-            #         # CASE B: Haal de vaste categorieën op uit het tabblad 'Groepen' (de dictionary)
-            #         raw_groep = str(row['Groepen']).strip()
-            #         items_te_scoren = groepen_mapping.get(raw_groep, [])
-
-            #     # Veiligheidscheck voor als er niets gevonden is
-            #     if not items_te_scoren:
-            #         print(f"Waarschuwing: Geen matrix items gevonden voor groep '{row['Groepen']}' bij vraag {vraag_naam}")
-
-            #     # Genereer de rijen (Text + Dropdown paren) binnen het grid
-            #     for index, item in enumerate(items_te_scoren):
-            #         # We saneren de tekst handmatig naar kleine letters zonder vreemde tekens
-            #         item_clean = re.sub(r'[^a-z0-9]', '', str(item).lower().strip())
-            #         voorwaarde_clean = re.sub(r'[^a-z0-9]', '', str(row['VoorwaardeID']).lower().strip())
-                    
-            #         # SLIMME TRUC: Omdat jouw utils.clean_name strikt maximaal 2 delen (Deel1_Deel2) 
-            #         # toestaat, bouwen we de veldnaam op als "v{VoorwaardeID}_{item}". 
-            #         # Dit levert exact 2 delen op (bijv: v317_pionierstadium) wat perfect uniek is!
-            #         uniek_veld_name = f"{vraag_naam}_matrix_{index}"
-            #         uniek_veld_name = uniek_veld_name[0:27] # Beperkt tot 32 tekens
-
-            #         # KOLOM 1 (Links): De naam van de soort of het stadium (w6 = 50% breedte)
-            #         survey_list.append({
-            #             "type": "note",
-            #             "name": f"{uniek_veld_name}_note", # Beperkt tot 32 tekens
-            #             "label": f"{item.capitalize()}",
-            #             "relevant": "",
-            #             "appearance": "w1" 
-            #         })
-                    
-            #         # KOLOM 2 (Rechts): De LSVI Keuzelijst Dropdown (w6 = 50% breedte)
-            #         survey_list.append({
-            #             "type": "select_one LSVI",
-            #             "name": uniek_veld_name,
-            #             "label": "Score:", # Spatie verbergt het label visueel, maar voorkomt Connect fouten
-            #             "relevant": "",
-            #             "appearance": "minimal w1" # 'minimal' maakt er een dropdown van
-            #         })
-
-            #     # 4. Sluit de matrix sub-groep netjes af
-            #     survey_list.append({
-            #         "type": "end group", "name": "", "label": "", "relevant": "", "appearance": ""
-            #     })
 
 
             else:
@@ -480,7 +471,7 @@ def generate_xlsform(
     # df_survey_final['guidance_hint'] = df_survey_final['guidance_hint'].replace("", np.nan)
 
     # rename columns to add default language
-    df_survey_final = df_survey_final.rename(columns={'label': 'label::nl', 'hint': 'hint::nl', 'guidance_hint': 'guidance_hint::nl'})
+    # df_survey_final = df_survey_final.rename(columns={'label': 'label::nl', 'hint': 'hint::nl', 'guidance_hint': 'guidance_hint::nl'})
 
     print("Excel bestand genereren...")
     with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
