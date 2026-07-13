@@ -16,7 +16,7 @@ if parent_dir not in sys.path:
 
 from src import utils
 
-SQLITE_PATH = "../input/LSVIHabitatTypes.sqlite"
+SQLITE_PATH = "./input/LSVIHabitatTypes.sqlite"
 
 
 def generate_xlsform(

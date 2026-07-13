@@ -47,3 +47,14 @@ Connectie met AGOL Feature Layer wordt gemaakt op basis van:
 
 De feature layer wordt volledig uitgelezen en op meer genormaliseerde wijze opgeslagen als sqlite databank in de output folder. 
 Dit toont enkel het concept, verdere verfijning nodig.
+
+
+### XLSForm genereren
+Search for "Anaconda Prompt" and open it
+Navigate: cd /d Q:\Projects\PRJ_GIS\lsvi-app-testing
+Run: run_xlsform_generation.bat
+
+### XLSForm genereren
+Search for "Anaconda Prompt" and open it
+Navigate: cd /d Q:\Projects\PRJ_GIS\lsvi-app-testing
+Run: run_upload_survey.bat

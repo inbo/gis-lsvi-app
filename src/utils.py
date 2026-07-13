@@ -5,8 +5,10 @@ import shutil
 from sys import platform
 import subprocess
 import os
+
 import arcgis
 import sqlite3
+from pathlib import Path
 
 def load_keepass_credentials(db_path, entry_name, key_file=None, cli_path=None):
     """
@@ -266,10 +268,9 @@ def get_survey_id_by_name(gis, survey_name: str) -> str:
     
     # If nothing matches, gather available titles to provide a helpful error message
     available_titles = [s.properties.get('title') for s in surveys if s.properties.get('title')]
-    raise ValueError(
-        f"Survey '{survey_name}' not found in the connected portal.\n"
-        f"Available surveys: {available_titles}"
-    )
+    print(f"Survey '{survey_name}' not found in the connected portal.\n")
+    print(f"Available surveys: {available_titles}")
+    return None
 
 def browse_folders_for_survey(gis, old_survey_id: str) -> str:
     """Finds the name of the folder containing a specific survey by browsing item lists.
@@ -403,3 +404,200 @@ def voeg_lsvi_beschrijving_toe(
     )
 
     return df_merged
+
+def delete_specific_survey(gis, survey_name: str):
+    """
+    Verwijdert een specifieke Survey123 survey en alle daaraan gekoppelde
+    elementen uit ArcGIS Online middels een onafhankelijke 'Multi-Pass' strategie.
+    
+    Deze functie is 100% onafhankelijk van naam-suffixes (_form, _fieldworker).
+    Het probeert herhaaldelijk items te wissen; zodra afhankelijke views in 
+    ronde 1 verdwijnen, worden de hoofdlagen in ronde 2 automatisch vrijgegeven.
+    """
+    print(f"=== Start gerichte verwijdering voor survey: '{survey_name}' ===")
+
+    # 1. Haal de unieke ID van het hoofdformulier op via de naam
+    old_survey_id = get_survey_id_by_name(gis, survey_name)
+
+    if not old_survey_id:
+        print(f" [!] Geen survey gevonden met de naam '{survey_name}'. Annuleren.")
+        return
+
+    form_item = gis.content.get(old_survey_id)
+    if not form_item:
+        print(f" [!] Kon het item met ID {old_survey_id} niet ophalen.")
+        return
+
+    form_id = form_item.id
+    user = gis.users.get(form_item.owner)
+
+    # 2. Zoek de map waarin deze specifieke survey leeft
+    folder_name, folder_id = browse_folders_for_survey(gis, old_survey_id)
+    print(f"Survey bevindt zich in map: '{folder_name}'")
+
+    # Haal ALLE items op uit deze map
+    all_folder_items = user.items(folder=folder_name)
+
+    # 3. Verzamel ALLE items die bij deze survey horen in één platte lijst
+    items_to_delete = []
+    
+    for item in all_folder_items:
+        is_target_item = (
+            item.id == form_id or 
+            item.title.lower().startswith(survey_name.lower()) or 
+            form_id in item.title or
+            (item.name and form_id in item.name)
+        )
+        if is_target_item:
+            items_to_delete.append(item)
+
+    if not items_to_delete:
+        print(" -> Geen gekoppelde elementen gevonden om te verwijderen.")
+        return
+
+    print(f"Totaal aantal geïdentificeerde survey-items voor verwijdering: {len(items_to_delete)}")
+
+    # 4. CRUCIAL: Hef EERST bij alle doelen de beveiliging op
+    # Als we dit pas tijdens het verwijderen doen, kan een lock elders een valse dependency-fout triggeren
+    print("Verwijder-beveiliging opheffen voor alle geselecteerde items...")
+    for item in items_to_delete:
+        try:
+            item.protect(enable=False)
+        except Exception:
+            pass
+
+    # 5. DE MULTI-PASS RETRY LOOP (De slimme motor)
+    pass_number = 1
+    max_passes = 4  # Meestal is alles in 2 passes al volledig weg
+    
+    while items_to_delete and pass_number <= max_passes:
+        print(f"\n--- Start Verwijderronde {pass_number} ---")
+        leftover_items = []
+        deleted_any_this_pass = False
+
+        for item in items_to_delete:
+            try:
+                # Poging tot verwijderen
+                item.delete()
+                print(f" [✓] Succesvol verwijderd: {item.title} ({item.type})")
+                deleted_any_this_pass = True
+            except Exception as e:
+                # Als het faalt (bijv. Error 400 wegens gerelateerd item), bewaren we hem voor de volgende ronde
+                leftover_items.append(item)
+
+        # Update de hoofdlijst met de items die we moesten skippen
+        items_to_delete = leftover_items
+
+        # Veiligheidsklep: als een hele ronde niks heeft kunnen verwijderen,
+        # zitten we vast op een échte harde fout (bijv. rechten) en moeten we stoppen om infinite loops te voorkomen.
+        if not deleted_any_this_pass and items_to_delete:
+            print("\n [!] Systeem zit vast: resterende items hebben permanente blokkades.")
+            break
+
+        pass_number += 1
+
+    # 6. Eindrapportage
+    print("\n=== Eindrapportage ===")
+    if items_to_delete:
+        print(f" [!] De volgende {len(items_to_delete)} items konden NIET worden verwijderd:")
+        for item in items_to_delete:
+            print(f"   - {item.title} ({item.type})")
+    else:
+        print(f" [✓] Voltooid: Alle elementen voor '{survey_name}' zijn succesvol opgeruimd. Map '{folder_name}' is behouden.")
+
+def upload_survey(
+    gis: arcgis.gis.GIS,
+    xlsform_path: str | Path,
+    target_folder: str = "Survey-LSVI App Test Auto",
+    thumbnail_path: str = r"./inbo_logo.jpg",
+) -> str | None:
+    """Publiceert een enkel XLSForm als een Survey123-object naar ArcGIS Online.
+
+    De functie controleert eerst of de doelmap al bestaat voor de ingelogde
+    gebruiker en maakt deze aan indien nodig. De titel van de survey wordt
+    automatisch afgeleid van de bestandsnaam (zonder de extensie).
+
+    Args:
+        gis (arcgis.gis.GIS): De actieve GIS-connectiepool.
+        xlsform_path (str | Path): Het bestandspad naar het XLSX/XLSForm.
+        target_folder (str, optional): De naam van de doelmap in ArcGIS Online.
+          Defaults to "Survey-LSVI App Test Auto".
+        thumbnail_path (str, optional): Het pad naar het inbo logo voor de
+          miniatuurweergave. Defaults to r"../inbo_logo.jpg".
+
+    Returns:
+        str | None: De nieuwe ArcGIS Item ID van de gepubliceerde survey, of
+        None als de publicatie is mislukt.
+    """
+    xlsform_path = Path(xlsform_path)
+
+    # 1. Valideer of het bestand daadwerkelijk bestaat op schijf
+    if not xlsform_path.exists():
+        print(f" [!] Bestand niet gevonden: '{xlsform_path}'")
+        return None
+
+    # Automatisch de surveynaam afleiden van de bestandsnaam (zonder .xlsx)
+    survey_title = xlsform_path.stem
+    print(f"\n=== Start upload voor survey: '{survey_title}' ===")
+
+    # 2. Initialiseer de Survey123 Manager
+    survey_manager = arcgis.apps.survey123.SurveyManager(gis)
+
+    # 3. Map-controle logic: Maak aan als deze nog niet bestaat
+    user = gis.users.me
+    bestaande_mappen = [folder.name for folder in user.folders]
+
+    if target_folder not in bestaande_mappen:
+        print(f"Map '{target_folder}' bestaat nog niet. Aanmaken...")
+        try:
+            gis.content.create_folder(folder=target_folder)
+            print(f" [✓] Map '{target_folder}' succesvol aangemaakt.")
+        except Exception as e:
+            print(
+                f" [!] Waarschuwing bij het aanmaken van map '{target_folder}': {e}"
+            )
+    else:
+        # We houden de log stil als de map al bestaat (fijn voor in een loop)
+        pass
+
+    # Valideer de thumbnail locatie
+    valid_thumbnail = (
+        thumbnail_path if Path(thumbnail_path).exists() else None
+    )
+
+    # 4. Het daadwerkelijke creatie- en publicatieproces
+    try:
+        # A. Maak het Survey Draft object aan in de cloud map
+        print(f" -> Concept aanmaken in map '{target_folder}'...")
+        new_survey = survey_manager.create(
+            title=survey_title,
+            folder=target_folder,
+            tags="LSVI, Survey123, Python",
+            summary=f"Automatisch gegenereerde LSVI survey op basis van {xlsform_path.name}.",
+            description=f"Deze survey is automatisch gepubliceerd via Python vanuit het bestand: {xlsform_path.name}.",
+            thumbnail=valid_thumbnail,
+        )
+
+        # B. Publiceer het formulier (aanmaken van tabellen, views en feature services)
+        print(
+            f" -> Publiceren naar ArcGIS Online begonnen (dit kan even duren)..."
+        )
+        new_survey.publish(
+            xlsform=str(xlsform_path),
+            enable_delete_protection=False,  # Zorgt dat je delete-script de tabel kan overschrijven
+            enable_sync=True,  # Cruciaal voor offline gebruik in de Survey123 veld-app
+            thumbnail=valid_thumbnail,
+            schema_changes=True,
+        )
+
+        # C. Haal de nieuwe unieke Item ID op ter verificatie
+        new_survey_id = get_survey_id_by_name(gis, survey_title)
+        print(f" [✓] Succesvol gepubliceerd! Item ID: {new_survey_id}")
+
+        return new_survey_id
+
+    except Exception as e:
+        print(
+            f" [!] Fout opgetreden bij het publiceren van '{survey_title}': {e}"
+        )
+        return None
