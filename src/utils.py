@@ -11,15 +11,32 @@ import sqlite3
 from pathlib import Path
 
 def load_keepass_credentials(db_path, entry_name, key_file=None, cli_path=None):
-    """
-    Securely prompts for a KeePassXC master password, fetches a username 
+    """Securely prompts for a KeePassXC master password, fetches a username 
     and password from a local database entry, and loads them into os.environ.
     
-    :param db_path: Absolute path to your local .kdbx file.
-    :param entry_name: The exact title of the entry inside KeePassXC.
-    :param key_file: Optional path to a KeePassXC key file if your database uses one.
-    :param cli_path: Optional explicit path to the keepassxc-cli executable.
+    If credentials already exist in the environment, they are reused 
+    and the password prompt is skipped.
+    
+    Args:
+        db_path: Absolute path to your local .kdbx file.
+        entry_name: The exact title of the entry inside KeePassXC.
+        key_file: Optional path to a KeePassXC key file if your database uses one.
+        cli_path: Optional explicit path to the keepassxc-cli executable.
+        
+    Returns:
+        tuple: (username, password) if successful, otherwise False.
     """
+    # -------------------------------------------------------------------------
+    # STAP 0: Snelkoppeling - Bestaan de credentials al in deze sessie?
+    # -------------------------------------------------------------------------
+    existing_user = os.environ.get("NOTEBOOK_USER")
+    existing_pass = os.environ.get("NOTEBOOK_PASSWORD")
+    
+    if existing_user and existing_pass:
+        print(f"ℹ️ Inloggegevens voor '{entry_name}' zijn al actief in deze sessie. Prompt overgeslagen.")
+        return existing_user, existing_pass
+    # -------------------------------------------------------------------------
+
     # 1. Automatically detect keepassxc-cli path based on Operating System
     if not cli_path:
         cli_path = shutil.which("keepassxc-cli")
@@ -42,8 +59,6 @@ def load_keepass_credentials(db_path, entry_name, key_file=None, cli_path=None):
     master_password = getpass.getpass("Enter your local KeePassXC Master Password: ")
 
     # 3. Construct the CLI command
-    # -s: Show protected attributes (like passwords) in clear text
-    # -a: Query multiple attributes sequentially (UserName first, then Password)
     cmd = [cli_path, "show", "-s", "-a", "UserName", "-a", "Password"]
     
     if key_file:
@@ -53,7 +68,6 @@ def load_keepass_credentials(db_path, entry_name, key_file=None, cli_path=None):
 
     # 4. Execute command and safely pipe the master password
     try:
-        # Appending '\n' mimics pressing 'Enter' on a standard terminal prompt
         result = subprocess.run(
             cmd,
             input=f"{master_password}\n",
@@ -242,7 +256,7 @@ def get_question_settings(row):
         print(f"Waarschuwing: Onbekend AnalyseVariabele type '{type_var}' voor VoorwaardeID {row['VoorwaardeID']}. Fallback naar 'text' vraag.") 
     return answer_type, vraag_appearance    
 
-def get_survey_id_by_name(gis, survey_name: str) -> str:
+def get_survey_id_by_name(survey_manager, survey_name: str) -> str:
     """Fetches the ID of a Survey123 survey by its title.
 
     Args:
@@ -256,7 +270,6 @@ def get_survey_id_by_name(gis, survey_name: str) -> str:
         ValueError: If no survey matches the provided title.
     """
     # Initialize the Survey Manager
-    survey_manager = arcgis.apps.survey123.SurveyManager(gis)
     surveys = survey_manager.surveys
     
     # Safely find matches using the .get() method

@@ -6,6 +6,8 @@ import sys
 import time
 from arcgis.gis import GIS
 import os
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Get the absolute path of the folder above the notebook
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), "."))
