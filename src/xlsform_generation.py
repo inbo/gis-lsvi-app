@@ -28,7 +28,10 @@ def generate_xlsform(
     """
     ### Load input data
     df_vereisten = pd.read_excel('./input/LSVI_packageInvoervereisten_uitdb_2026-06-08_aanvullingenLSVI_app.xlsx', sheet_name='LSVI_packageInvoervereisten_uit')
-    # We should only use vereiesten v3
+    df_vereisten["Habitattype"] = df_vereisten["Habitattype"].astype(str).str.strip()
+    df_vereisten["BeoordelingID"] = df_vereisten["BeoordelingID"].astype(int)
+    df_vereisten["TaxongroepId"] = df_vereisten["TaxongroepId"].fillna(-1).astype(int)
+    # We should only use vereisten v3
     df_vereisten = df_vereisten[df_vereisten['Versie'] == 'Versie 3']
     print(df_vereisten.shape)
     # Maak unieke ID aan voor vragen adhv voorwaarde id + habitattype
@@ -267,7 +270,7 @@ def generate_xlsform(
             # "hint": utils.get_habitat_hint(hab),
             # "guidance_hint": get_habitat_hint(hab),   # Dynamische hint genereren op basis van de habitattype code
             "relevant": f"selected(string(${{habitat_keuze}}), '{hab_clean}')",   # De groep erft de relevantie van het repeat blok. Dit mag leeg zijn als we repeats gebruiken.
-            "appearance": "w1 compact field-list" # Zorgt dat het als 1 pagina toont in de app
+            "appearance": "field-list" # Zorgt dat het als 1 pagina toont in de app
         })
 
         # Filter de vereisten voor dít specifieke habitattype
@@ -276,6 +279,30 @@ def generate_xlsform(
         # 4.3. Genereer de vragen binnen dit habitattype
         for idx, row in df_hab_vereisten.iterrows():
             vraag_naam = f"{row['vraag_id']}"
+
+            # Add spacing after question
+            if idx > 0:
+                survey_list.append({
+                    "type": "note",
+                    "name": f"div_{vraag_naam}",
+                    # 1. Outer DIV forces exactly 40px of padding above and below
+                    # 2. Inner DIV draws the 2px line right in the dead-center of that space
+                    # "label": "<div style='height: 1px; background-color: #31872e; margin: 20px 0; line-height: 0;'></div>",                # "label": "<div style='margin: 25px 0; padding-top: 15px; border-top: 2px solid #31872e; padding-bottom: 15px;'></div>",
+                    "label": "<div style='background-color: #31872e; height: 1px; font-size: 2px; padding: 0; margin: 3px 0; line-height: 1px;'>&nbsp;</div>",
+                    "relevant": "",
+                    "appearance": "",
+                    "bind::esri:fieldType": "null"
+                })
+                survey_list.append({
+                    "type": "note",
+                    "name": f"div_{vraag_naam}2",
+                    # 1. Outer DIV forces exactly 40px of padding above and below
+                    # 2. Inner DIV draws the 2px line right in the dead-center of that space
+                    "label": "<br>",                # "label": "<div style='margin: 25px 0; padding-top: 15px; border-top: 2px solid #31872e; padding-bottom: 15px;'></div>",
+                    "relevant": "",
+                    "appearance": "",
+                    "bind::esri:fieldType": "null"
+                })
 
             # Type_vraag heeft 3 mogelijkheden: Orig (normaal), Matrixvraag of 'niet nodig in app':
             if row['Type_vraag'].lower() == 'orig':
