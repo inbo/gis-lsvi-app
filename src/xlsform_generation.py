@@ -230,6 +230,50 @@ def generate_xlsform(
         "type": "end group", "name": "", "label": "", "relevant": "", "appearance": ""
     })
 
+    ########################################
+    ### SAMPLE OF TABLE LIST MATRIX QUESTION JOOST TO REMOVE LATER
+    ########################################
+    # Add sample hardcoded table list matrixquestion so Toon en Johannes can test if width is enough
+    survey_list.append({
+                    "type": "begin group",
+                    "name": f"test_matrix",
+                    "label": "Deze vraag dient enkel als voorbeeld van matrixgrid. Is er genoeg ruimte om het juiste antwoord aan te duiden?", # Genereert jouw mooie HTML label
+                    "hint": np.nan,
+                    "relevant": "",
+                    "appearance": "table-list" # <-- GEWIJZIGD: Verander 'w2 grid-layout' naar 'table-list'
+                })
+
+            #     # Welke groep moeten we bevragen in matrix?
+    groep_naam = 'lsvi'
+    items_te_scoren = []
+    tax_id = 1
+    if pd.notna(tax_id):
+        df_sub_soorten = df_soorten[df_soorten['TaxongroepId'] == int(tax_id)]
+        items_te_scoren = df_sub_soorten['NedNaam'].fillna(df_sub_soorten['WetNaam']).tolist()
+                
+    # 2. Genereer de matrix rijen
+    # Binnen een 'table-list' groep hoef je GEEN 'notes' toe te voegen voor de labels!
+    for index, item in enumerate(items_te_scoren):
+        uniek_veld_name = f"test_matrix_{index}"
+        uniek_veld_name = uniek_veld_name[0:27] # Beperkt tot 32 tekens max voor GIS/Excel kolommen
+
+        survey_list.append({
+            "type": "select_one LSVI", # Zorg dat al deze vragen exact dezelfde keuzelijst delen!
+            "name": uniek_veld_name,
+            "label": f"{item.capitalize()}", 
+            "relevant": "",
+            "appearance": "" 
+        })
+
+    # 3. Sluit de matrix sub-groep netjes af
+    survey_list.append({
+        "type": "end group", "name": "test_matrix", "label": "", "relevant": "", "appearance": ""
+    })
+
+    #########################################
+    ### END OF BLOCK TO DELETE LATER
+    ########################################
+
     ### Questions per habitat
     # Trigger vraag
     survey_list.append({
@@ -310,7 +354,7 @@ def generate_xlsform(
                 answer_type, vraag_appearance = utils.get_question_settings(row)
 
                 # Controleer of er een beschrijving is
-                heeft_beschrijving = pd.notna(row['Beschrijving']) and str(row['Beschrijving']).strip() != ""
+                # heeft_beschrijving = pd.notna(row['Beschrijving']) and str(row['Beschrijving']).strip() != ""
 
                 # Vraag toevoegen
                 # Label van de vraag is combinatie van Voorwaarde + Indicator + Beoordeling(en eventueel Eenheid)
