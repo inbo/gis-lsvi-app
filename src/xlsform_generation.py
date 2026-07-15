@@ -32,7 +32,7 @@ def generate_xlsform(
     df_vereisten["BeoordelingID"] = df_vereisten["BeoordelingID"].astype(int)
     df_vereisten["TaxongroepId"] = df_vereisten["TaxongroepId"].fillna(-1).astype(int)
     # We should only use vereisten v3
-    df_vereisten = df_vereisten[df_vereisten['Versie'] == 'Versie 3']
+    df_vereisten = df_vereisten[(df_vereisten['Versie'] == 'Versie 3') & df_vereisten['Type_vraag'].isin(['Orig', 'Matrixvraag'])]
     print(df_vereisten.shape)
     # Maak unieke ID aan voor vragen adhv voorwaarde id + habitattype
     df_vereisten['vraag_id'] = "vrg_" + df_vereisten['VoorwaardeID'].astype(str) + "_" + (df_vereisten['Habitatsubtype'].astype(str).apply(utils.clean_name))
