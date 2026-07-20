@@ -6,6 +6,7 @@ import sys
 import time
 from arcgis.gis import GIS
 import os
+import json
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -36,6 +37,12 @@ def main():
         help="De doelmap in ArcGIS Online (default: Survey-LSVI App Test Auto)",
     )
 
+    parser.add_argument(
+        "--manual_old_survey_id",
+        default="",
+        help="Het ID van de oude survey in ArcGIS Online (optioneel)",
+    )
+
     args = parser.parse_args()
     xlsform_path = Path(args.xlsform_path)
 
@@ -54,7 +61,12 @@ def main():
     gis = GIS(AGOL_URL, AGOL_USER, AGOL_PASS)
 
     # DELETE
-    old_survey_id = utils.delete_specific_survey(gis, survey_name=survey_name)
+    if args.manual_old_survey_id:
+        # Then we deleted the form and we need to add the input argument
+        old_survey_id = args.manual_old_survey_id
+        print(f"ℹ️ Using manual old survey ID: {old_survey_id}")
+    else:
+        old_survey_id = utils.delete_specific_survey(gis, survey_name=survey_name)
 
     # PUBLISH
     new_survey_id = utils.upload_survey(

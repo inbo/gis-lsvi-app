@@ -184,7 +184,7 @@ def generate_xlsform(
     })
 
     survey_list.append({
-        "type": "integer", 
+        "type": "decimal", 
         "name": "bwk_centroid_x", 
         "label": "BWK Centroid X", 
         "default": "", 
@@ -195,7 +195,7 @@ def generate_xlsform(
     })
 
     survey_list.append({
-        "type": "integer", 
+        "type": "decimal", 
         "name": "bwk_centroid_y", 
         "label": "BWK Centroid Y", 
         "default": "", 
@@ -328,7 +328,7 @@ def generate_xlsform(
         "label": "Welk habitat(sub)type wil je inventariseren?",
         "relevant": "",  # Altijd zichtbaar
         "appearance": "horizontal", #blank defaults to radio buttons instead of "minimal autocomplete",
-        "choice_filter": "string(name) = string(${hab1}) or string(name) = string(${hab2}) or string(name) = string(${hab3}) or string(name) = string(${hab4}) or string(name) = string(${hab5})" # This makes sure we only get to choose habitats that were mapped in BWK field app for this polygon.
+        "choice_filter": "string(name) = string(${hab1}) or string(name) = string(${hab2}) or string(name) = string(${hab3})" # This makes sure we only get to choose habitats that were mapped in BWK field app for this polygon.
     })
 
 
