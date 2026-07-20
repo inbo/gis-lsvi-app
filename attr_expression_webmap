@@ -1,25 +1,25 @@
-// Force the values to uppercase immediately
-var bwk_plot_id = $feature.plot_ID;
-var bwk_globalid = $feature.GlobalID;
+var bwk_plot_id = UrlEncode(DefaultValue($feature.plot_ID, ""));
+var bwk_globalid = UrlEncode(DefaultValue($feature.GlobalID, ""));
+
 var hab1 = Lower($feature.HAB1);
 var hab2 = Lower($feature.HAB2);
 var hab3 = Lower($feature.HAB3);
-var hab4 = Lower($feature.HAB4);
-var hab5 = Lower($feature.HAB5);
+// var hab4 = Lower($feature.HAB4);
+// var hab5 = Lower($feature.HAB5);
 var phab1 = Lower($feature.PHAB1);
 var phab2 = Lower($feature.PHAB2);
 var phab3 = Lower($feature.PHAB3);
-var phab4 = Lower($feature.PHAB4);
-var phab5 = Lower($feature.PHAB5);
+// var phab4 = Lower($feature.PHAB4);
+// var phab5 = Lower($feature.PHAB5);
 
 
 var poly_geom = Geometry($feature);
 var pt = Centroid(poly_geom);
-var center_x = pt.x;
-var center_y = pt.y;
+var center_x = Round(pt.x, 8);
+var center_y = Round(pt.y, 8);
 
-// Use id of form item in AGOL
-var baseUrl = "https://survey123.arcgis.app?itemID=31dc3e2f6faa4282869e78438a076954";
-var bwk_info = `&center=${center_y},${center_x}&field:bwk_plot_id=${bwk_plot_id}&field:bwk_globalid=${bwk_globalid}&field:bwk_centroid_x=${center_x}&field:bwk_centroid_y=${center_y}`;
-var hab_info = `&field:hab1=${hab1}&field:hab2=${hab2}&field:hab3=${hab3}&field:hab4=${hab4}&field:hab5=${hab5}&field:phab1=${phab1}&field:phab2=${phab2}&field:phab3=${phab3}&field:phab4=${phab4}&field:phab5=${phab5}`;
-return baseUrl + bwk_info + hab_info;
+// // Use id of form item in AGOL
+var baseUrl = "https://survey123.arcgis.app?itemID=6e53ea389e9049c297acb78f51c06a98";
+var bwk_info = `&field:bwk_plot_id=${bwk_plot_id}&field:bwk_globalid=${bwk_globalid}&field:bwk_centroid_x=${center_x}&field:bwk_centroid_y=${center_y}`;
+var hab_info = `&field:hab1=${hab1}&field:hab2=${hab2}&field:hab3=${hab3}&field:phab1=${phab1}&field:phab2=${phab2}&field:phab3=${phab3}`;
+return baseUrl + bwk_info + hab_info
