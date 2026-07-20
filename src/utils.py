@@ -260,7 +260,7 @@ def get_survey_id_by_name(survey_manager, survey_name: str) -> str:
     """Fetches the ID of a Survey123 survey by its title.
 
     Args:
-        gis: The authenticated GIS connection object.
+        survey_manager: The Survey123 SurveyManager object.
         survey_name: The exact title of the survey to find.
 
     Returns:
@@ -428,9 +428,9 @@ def delete_specific_survey(gis, survey_name: str):
     ronde 1 verdwijnen, worden de hoofdlagen in ronde 2 automatisch vrijgegeven.
     """
     print(f"=== Start gerichte verwijdering voor survey: '{survey_name}' ===")
-
+    survey_manager = arcgis.apps.survey123.SurveyManager(gis)
     # 1. Haal de unieke ID van het hoofdformulier op via de naam
-    old_survey_id = get_survey_id_by_name(gis, survey_name)
+    old_survey_id = get_survey_id_by_name(survey_manager, survey_name)
 
     if not old_survey_id:
         print(f" [!] Geen survey gevonden met de naam '{survey_name}'. Annuleren.")
@@ -445,8 +445,12 @@ def delete_specific_survey(gis, survey_name: str):
     user = gis.users.get(form_item.owner)
 
     # 2. Zoek de map waarin deze specifieke survey leeft
-    folder_name, folder_id = browse_folders_for_survey(gis, old_survey_id)
-    print(f"Survey bevindt zich in map: '{folder_name}'")
+    try:
+        folder_name, folder_id = browse_folders_for_survey(gis, old_survey_id)
+        print(f"Survey bevindt zich in map: '{folder_name}'")
+    except Exception as e:
+        print(f" [!] Fout bij het ophalen van de map voor survey '{survey_name}': {e}")
+        return
 
     # Haal ALLE items op uit deze map
     all_folder_items = user.items(folder=folder_name)
@@ -470,6 +474,9 @@ def delete_specific_survey(gis, survey_name: str):
 
     print(f"Totaal aantal geïdentificeerde survey-items voor verwijdering: {len(items_to_delete)}")
 
+    # Sorteer zodat webmap en view eerst verwijderd worden
+    items_to_delete.sort(key=get_delete_priority)
+
     # 4. CRUCIAL: Hef EERST bij alle doelen de beveiliging op
     # Als we dit pas tijdens het verwijderen doen, kan een lock elders een valse dependency-fout triggeren
     print("Verwijder-beveiliging opheffen voor alle geselecteerde items...")
@@ -481,7 +488,7 @@ def delete_specific_survey(gis, survey_name: str):
 
     # 5. DE MULTI-PASS RETRY LOOP (De slimme motor)
     pass_number = 1
-    max_passes = 4  # Meestal is alles in 2 passes al volledig weg
+    max_passes = 2  # Meestal is alles in 2 passes al volledig weg
     
     while items_to_delete and pass_number <= max_passes:
         print(f"\n--- Start Verwijderronde {pass_number} ---")
@@ -600,11 +607,11 @@ def upload_survey(
             enable_delete_protection=False,  # Zorgt dat je delete-script de tabel kan overschrijven
             enable_sync=True,  # Cruciaal voor offline gebruik in de Survey123 veld-app
             thumbnail=valid_thumbnail,
-            schema_changes=True,
+            # schema_changes=True, # Given we remove and reupload, we can turn this off (generates errors)
         )
 
         # C. Haal de nieuwe unieke Item ID op ter verificatie
-        new_survey_id = get_survey_id_by_name(gis, survey_title)
+        new_survey_id = get_survey_id_by_name(survey_manager, survey_title)
         print(f" [✓] Succesvol gepubliceerd! Item ID: {new_survey_id}")
 
         return new_survey_id
@@ -614,3 +621,15 @@ def upload_survey(
             f" [!] Fout opgetreden bij het publiceren van '{survey_title}': {e}"
         )
         return None
+
+def get_delete_priority(item):
+    """Bepaalt de verwijder-volgorde op basis van afhankelijkheden."""
+    if item.type == "Web Map":
+        return 1
+    elif item.type == "Feature Service" and "_form" in item.title.lower():
+        return 2  # Eerst de View
+    elif item.type == "Feature Service":
+        return 3  # Dan de Bron Feature Layer
+    elif item.type == "Form":
+        return 4  # Tot slot het Formulier
+    return 5

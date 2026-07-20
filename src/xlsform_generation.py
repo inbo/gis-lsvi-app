@@ -112,7 +112,7 @@ def generate_xlsform(
 
     # Zorg dat de talen overeenkomen in survey en choices!
     if 'label' in df_choices_final.columns:
-        df_choices_final.rename(columns={'label': 'label::nl'}, inplace=True)
+        df_choices_final.rename(columns={'label': 'label'}, inplace=True)
 
 
     ### Settings
@@ -162,12 +162,45 @@ def generate_xlsform(
     # BWK questions
     # Toon BWK ID over hele breedte
     survey_list.append({
-        "type": "integer", 
-        "name": "bwk_id", 
-        "label": "BWK ID", 
+        "type": "text", 
+        "name": "bwk_plot_id", 
+        "label": "Plot ID", 
         "default": "", 
         "relevant": "", 
         "appearance": "",  # Neemt 5/5 kolommen in, dus over hele rij
+        "calculation": "", 
+        "readonly": "yes"
+    })
+
+    survey_list.append({
+        "type": "text", 
+        "name": "bwk_globalid", 
+        "label": "Global ID", 
+        "default": "", 
+        "relevant": "", 
+        "appearance": "",  # Neemt 5/5 kolommen in, dus over hele rij
+        "calculation": "", 
+        "readonly": "yes"
+    })
+
+    survey_list.append({
+        "type": "integer", 
+        "name": "bwk_centroid_x", 
+        "label": "BWK Centroid X", 
+        "default": "", 
+        "relevant": "", 
+        "appearance": "hidden",  # Neemt 5/5 kolommen in, dus over hele rij
+        "calculation": "", 
+        "readonly": "yes"
+    })
+
+    survey_list.append({
+        "type": "integer", 
+        "name": "bwk_centroid_y", 
+        "label": "BWK Centroid Y", 
+        "default": "", 
+        "relevant": "", 
+        "appearance": "hidden",  # Neemt 5/5 kolommen in, dus over hele rij
         "calculation": "", 
         "readonly": "yes"
     })
@@ -187,7 +220,8 @@ def generate_xlsform(
         "label": "<b>Habitat Code</b>", 
         "relevant": "", 
         "appearance": "w1", 
-        "calculation": ""
+        "calculation": "",
+        "bind::esri:fieldType": "null"
     })
     survey_list.append({
         "type": "note", 
@@ -195,9 +229,9 @@ def generate_xlsform(
         "label": "<b>Percentage (%)</b>", 
         "relevant": "", 
         "appearance": "w1", 
-        "calculation": ""
+        "calculation": "",
+        "bind::esri:fieldType": "null"
     })
-
 
     # Toon HAB en PHAB in grid
     for i in range(1, 6):
@@ -230,49 +264,48 @@ def generate_xlsform(
         "type": "end group", "name": "", "label": "", "relevant": "", "appearance": ""
     })
 
-    ########################################
-    ### SAMPLE OF TABLE LIST MATRIX QUESTION JOOST TO REMOVE LATER
-    ########################################
-    # Add sample hardcoded table list matrixquestion so Toon en Johannes can test if width is enough
-    survey_list.append({
-                    "type": "begin group",
-                    "name": f"test_matrix",
-                    "label": "Deze vraag dient enkel als voorbeeld van matrixgrid. Is er genoeg ruimte om het juiste antwoord aan te duiden?", # Genereert jouw mooie HTML label
-                    "hint": np.nan,
-                    "relevant": "",
-                    "appearance": "table-list" # <-- GEWIJZIGD: Verander 'w2 grid-layout' naar 'table-list'
-                })
+    # ########################################
+    # ### SAMPLE OF TABLE LIST MATRIX QUESTION JOOST TO REMOVE LATER
+    # ########################################
+    # # Add sample hardcoded table list matrixquestion so Toon en Johannes can test if width is enough
+    # survey_list.append({
+    #                 "type": "begin group",
+    #                 "name": f"test_matrix",
+    #                 "label": "Deze vraag dient enkel als voorbeeld van matrixgrid. Is er genoeg ruimte om het juiste antwoord aan te duiden?", # Genereert jouw mooie HTML label
+    #                 "hint": np.nan,
+    #                 "relevant": "",
+    #                 "appearance": "table-list" # <-- GEWIJZIGD: Verander 'w2 grid-layout' naar 'table-list'
+    #             })
 
-            #     # Welke groep moeten we bevragen in matrix?
-    groep_naam = 'lsvi'
-    items_te_scoren = []
-    tax_id = 1
-    if pd.notna(tax_id):
-        df_sub_soorten = df_soorten[df_soorten['TaxongroepId'] == int(tax_id)]
-        items_te_scoren = df_sub_soorten['NedNaam'].fillna(df_sub_soorten['WetNaam']).tolist()
+    # # Welke groep moeten we bevragen in matrix?
+    # groep_naam = 'lsvi'
+    # items_te_scoren = []
+    # tax_id = 1
+    # if pd.notna(tax_id):
+    #     df_sub_soorten = df_soorten[df_soorten['TaxongroepId'] == int(tax_id)]
+    #     items_te_scoren = df_sub_soorten['NedNaam'].fillna(df_sub_soorten['WetNaam']).tolist()
                 
-    # 2. Genereer de matrix rijen
-    # Binnen een 'table-list' groep hoef je GEEN 'notes' toe te voegen voor de labels!
-    for index, item in enumerate(items_te_scoren):
-        uniek_veld_name = f"test_matrix_{index}"
-        uniek_veld_name = uniek_veld_name[0:27] # Beperkt tot 32 tekens max voor GIS/Excel kolommen
+    # # 2. Genereer de matrix rijen
+    # # Binnen een 'table-list' groep hoef je GEEN 'notes' toe te voegen voor de labels!
+    # for index, item in enumerate(items_te_scoren):
+    #     uniek_veld_name = f"test_matrix_{index}"
 
-        survey_list.append({
-            "type": "select_one LSVI", # Zorg dat al deze vragen exact dezelfde keuzelijst delen!
-            "name": uniek_veld_name,
-            "label": f"{item.capitalize()}", 
-            "relevant": "",
-            "appearance": "" 
-        })
+    #     survey_list.append({
+    #         "type": "select_one LSVI", # Zorg dat al deze vragen exact dezelfde keuzelijst delen!
+    #         "name": uniek_veld_name,
+    #         "label": f"{item.capitalize()}", 
+    #         "relevant": "",
+    #         "appearance": "" 
+    #     })
 
-    # 3. Sluit de matrix sub-groep netjes af
-    survey_list.append({
-        "type": "end group", "name": "test_matrix", "label": "", "relevant": "", "appearance": ""
-    })
+    # # 3. Sluit de matrix sub-groep netjes af
+    # survey_list.append({
+    #     "type": "end group", "name": "", "label": "", "relevant": "", "appearance": ""
+    # })
 
-    #########################################
-    ### END OF BLOCK TO DELETE LATER
-    ########################################
+    # #########################################
+    # ### END OF BLOCK TO DELETE LATER
+    # ########################################
 
     ### Questions per habitat
     # Trigger vraag
@@ -312,7 +345,6 @@ def generate_xlsform(
             "name": f"grp_habitat_{hab_clean}",
             "label": f"Habitat {hab_clean.upper()}",
             # "hint": utils.get_habitat_hint(hab),
-            # "guidance_hint": get_habitat_hint(hab),   # Dynamische hint genereren op basis van de habitattype code
             "relevant": f"selected(string(${{habitat_keuze}}), '{hab_clean}')",   # De groep erft de relevantie van het repeat blok. Dit mag leeg zijn als we repeats gebruiken.
             "appearance": "field-list" # Zorgt dat het als 1 pagina toont in de app
         })
@@ -324,29 +356,29 @@ def generate_xlsform(
         for idx, row in df_hab_vereisten.iterrows():
             vraag_naam = f"{row['vraag_id']}"
 
-            # Add spacing after question
-            if idx > 0:
-                survey_list.append({
-                    "type": "note",
-                    "name": f"div_{vraag_naam}",
-                    # 1. Outer DIV forces exactly 40px of padding above and below
-                    # 2. Inner DIV draws the 2px line right in the dead-center of that space
-                    # "label": "<div style='height: 1px; background-color: #31872e; margin: 20px 0; line-height: 0;'></div>",                # "label": "<div style='margin: 25px 0; padding-top: 15px; border-top: 2px solid #31872e; padding-bottom: 15px;'></div>",
-                    "label": "<div style='background-color: #31872e; height: 1px; font-size: 2px; padding: 0; margin: 3px 0; line-height: 1px;'>&nbsp;</div>",
-                    "relevant": "",
-                    "appearance": "",
-                    "bind::esri:fieldType": "null"
-                })
-                survey_list.append({
-                    "type": "note",
-                    "name": f"div_{vraag_naam}2",
-                    # 1. Outer DIV forces exactly 40px of padding above and below
-                    # 2. Inner DIV draws the 2px line right in the dead-center of that space
-                    "label": "<br>",                # "label": "<div style='margin: 25px 0; padding-top: 15px; border-top: 2px solid #31872e; padding-bottom: 15px;'></div>",
-                    "relevant": "",
-                    "appearance": "",
-                    "bind::esri:fieldType": "null"
-                })
+            # # Add spacing after question
+            # if idx > 0:
+            #     survey_list.append({
+            #         "type": "note",
+            #         "name": f"div_{vraag_naam}",
+            #         # 1. Outer DIV forces exactly 40px of padding above and below
+            #         # 2. Inner DIV draws the 2px line right in the dead-center of that space
+            #         # "label": "<div style='height: 1px; background-color: #31872e; margin: 20px 0; line-height: 0;'></div>",                # "label": "<div style='margin: 25px 0; padding-top: 15px; border-top: 2px solid #31872e; padding-bottom: 15px;'></div>",
+            #         "label": "<div style='background-color: #31872e; height: 1px; font-size: 2px; padding: 0; margin: 3px 0; line-height: 1px;'>&nbsp;</div>",
+            #         "relevant": "",
+            #         "appearance": "",
+            #         "bind::esri:fieldType": "null"
+            #     })
+            #     survey_list.append({
+            #         "type": "note",
+            #         "name": f"div_{vraag_naam}2",
+            #         # 1. Outer DIV forces exactly 40px of padding above and below
+            #         # 2. Inner DIV draws the 2px line right in the dead-center of that space
+            #         "label": "<br>",                # "label": "<div style='margin: 25px 0; padding-top: 15px; border-top: 2px solid #31872e; padding-bottom: 15px;'></div>",
+            #         "relevant": "",
+            #         "appearance": "",
+            #         "bind::esri:fieldType": "null"
+            #     })
 
             # Type_vraag heeft 3 mogelijkheden: Orig (normaal), Matrixvraag of 'niet nodig in app':
             if row['Type_vraag'].lower() == 'orig':
@@ -391,7 +423,7 @@ def generate_xlsform(
 
                     # Sluit de groep netjes af
                     survey_list.append({
-                        "type": "end group", "name": f"besch_{vraag_naam}", "label": np.nan, "relevant": "", "appearance": ""
+                        "type": "end group", "name": "", "label": np.nan, "relevant": "", "appearance": ""
                     })
 
             elif row['Type_vraag'].lower() == 'matrixvraag':
@@ -430,7 +462,7 @@ def generate_xlsform(
 
                     # Sluit de inklapbare subgroep
                     survey_list.append({
-                        "type": "end group", "name": f"grp_besch_{vraag_naam}", "label": "", "relevant": "", "appearance": ""
+                        "type": "end group", "name": "", "label": "", "relevant": "", "appearance": ""
                     })
 
                 # 3. Welke groep moeten we bevragen? (Sleutelsoorten of vaste mapping)
@@ -493,7 +525,6 @@ def generate_xlsform(
                         "name": f"grp_lijst_{vraag_naam}",
                         "label": "🔽 Bekijk soortenlijst", # Dit is de tekst op de klikbare balk
                         "hint": np.nan,
-                        "guidance_hint": np.nan,
                         "relevant": "",
                         "appearance": "compact" # <--- Dit commando maakt hem standaard ingeklapt!
                     })
@@ -504,7 +535,6 @@ def generate_xlsform(
                         "name": f"note_{vraag_naam}",
                         "label": html_soorten, # We stoppen jouw HTML nu in de 'label' van de note
                         "hint": np.nan,
-                        "guidance_hint": np.nan,
                         "relevant": "",
                         "appearance": "",
                         "bind::esri:fieldType": "null"
@@ -516,7 +546,6 @@ def generate_xlsform(
                         "name": "", 
                         "label": np.nan, 
                         "hint": np.nan, 
-                        "guidance_hint": np.nan,
                         "relevant": "", 
                         "appearance": ""
                     })
@@ -539,7 +568,10 @@ def generate_xlsform(
     ### Export XLSForm
     # Vervang alle lege strings in de hint (en eventueel andere) kolommen door echte NaN waarden
     df_survey_final['hint'] = df_survey_final['hint'].replace("", np.nan)
-    # df_survey_final['guidance_hint'] = df_survey_final['guidance_hint'].replace("", np.nan)
+
+    # Reduce choice list to values needed in the survey
+    choice_list = df_survey_final['type'].str.extract(r'select_(?:one|multiple)\s+(.+)', expand=False)
+    df_choices_final = df_choices_final[df_choices_final.list_name.isin(choice_list.unique())]
 
     # rename columns to add default language
     # df_survey_final = df_survey_final.rename(columns={'label': 'label::nl', 'hint': 'hint::nl', 'guidance_hint': 'guidance_hint::nl'})

@@ -19,6 +19,7 @@ echo.
 echo [STAP 2/3] Verwerken van Habitat 5-7...
 python %SCRIPT_PATH% --xlsform-path "%EXCEL_OUTPUT_DIR%\xlsform_hab5-7.xlsx" --target-folder "Survey-LSVI App Test Auto"
 echo.
+
 echo [STAP 3/3] Verwerken van Habitat 9...
 python %SCRIPT_PATH% --xlsform-path "%EXCEL_OUTPUT_DIR%\xlsform_hab9.xlsx" --target-folder "Survey-LSVI App Test Auto"
 echo.
