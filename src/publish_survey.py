@@ -54,15 +54,46 @@ def main():
     gis = GIS(AGOL_URL, AGOL_USER, AGOL_PASS)
 
     # DELETE
-    utils.delete_specific_survey(gis, survey_name=survey_name)
+    old_survey_id = utils.delete_specific_survey(gis, survey_name=survey_name)
 
     # PUBLISH
-    item_id = utils.upload_survey(
+    new_survey_id = utils.upload_survey(
             gis=gis,
             xlsform_path=xlsform_path,
             target_folder=args.target_folder,
             thumbnail_path = r"./inbo_logo.jpg",
         )
+    
+    # Update BWK field map web app item with new form id
+    FIELD_MAP_ID = "ad1a1d268ddf4f02b1bb48f6f1b85f1c"
+
+    # Get the web map's internal data configuration
+    map_item = gis.content.get(FIELD_MAP_ID)
+    map_data = map_item.get_data()
+
+    # Convert configuration to a string to easily replace the old ID globally
+    map_data_str = json.dumps(map_data)
+
+    # Scenario A: The survey ID did not change (e.g., standard overwrite publish)
+    if old_survey_id == new_survey_id:
+        print("ℹ️ The survey ID did not change. No web map update is required.")
+
+    # Scenario B: The survey ID changed (e.g., wipe and recreate workflow)
+    elif old_survey_id in map_data_str:
+        # Safely swap out ONLY the old target ID with the new one
+        updated_map_data_str = map_data_str.replace(old_survey_id, new_survey_id)
+        updated_map_data = json.loads(updated_map_data_str)
         
+        # Push the updated data config back to the Web Map item in AGOL
+        map_item.update(data=updated_map_data)
+        print(f"Success! Updated the pop-up link in the Web Map from {old_survey_id} to {new_survey_id}.")
+
+    # Scenario C: Safety net in case the survey ID isn't found in the popup at all
+    else:
+        print(
+            f"⚠️ Warning: The old survey ID ({old_survey_id}) for '{survey_name}' "
+            "was not found in the Web Map pop-up configuration. No update was made."
+        )
+            
 if __name__ == "__main__":
     main()

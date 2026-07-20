@@ -234,7 +234,7 @@ def generate_xlsform(
     })
 
     # Toon HAB en PHAB in grid
-    for i in range(1, 6):
+    for i in range(1, 4):
         # Top row: Habitat Code (Breedte = w1)
         survey_list.append({
             "type": "text", 

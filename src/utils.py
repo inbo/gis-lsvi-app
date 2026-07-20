@@ -418,7 +418,7 @@ def voeg_lsvi_beschrijving_toe(
 
     return df_merged
 
-def delete_specific_survey(gis, survey_name: str):
+def delete_specific_survey(gis, survey_name: str) -> str | None:
     """
     Verwijdert een specifieke Survey123 survey en alle daaraan gekoppelde
     elementen uit ArcGIS Online middels een onafhankelijke 'Multi-Pass' strategie.
@@ -434,12 +434,12 @@ def delete_specific_survey(gis, survey_name: str):
 
     if not old_survey_id:
         print(f" [!] Geen survey gevonden met de naam '{survey_name}'. Annuleren.")
-        return
+        return None
 
     form_item = gis.content.get(old_survey_id)
     if not form_item:
         print(f" [!] Kon het item met ID {old_survey_id} niet ophalen.")
-        return
+        return None
 
     form_id = form_item.id
     user = gis.users.get(form_item.owner)
@@ -450,7 +450,7 @@ def delete_specific_survey(gis, survey_name: str):
         print(f"Survey bevindt zich in map: '{folder_name}'")
     except Exception as e:
         print(f" [!] Fout bij het ophalen van de map voor survey '{survey_name}': {e}")
-        return
+        return None
 
     # Haal ALLE items op uit deze map
     all_folder_items = user.items(folder=folder_name)
@@ -470,7 +470,7 @@ def delete_specific_survey(gis, survey_name: str):
 
     if not items_to_delete:
         print(" -> Geen gekoppelde elementen gevonden om te verwijderen.")
-        return
+        return None
 
     print(f"Totaal aantal geïdentificeerde survey-items voor verwijdering: {len(items_to_delete)}")
 
@@ -512,7 +512,7 @@ def delete_specific_survey(gis, survey_name: str):
         # zitten we vast op een échte harde fout (bijv. rechten) en moeten we stoppen om infinite loops te voorkomen.
         if not deleted_any_this_pass and items_to_delete:
             print("\n [!] Systeem zit vast: resterende items hebben permanente blokkades.")
-            break
+            return form_id
 
         pass_number += 1
 
@@ -522,8 +522,10 @@ def delete_specific_survey(gis, survey_name: str):
         print(f" [!] De volgende {len(items_to_delete)} items konden NIET worden verwijderd:")
         for item in items_to_delete:
             print(f"   - {item.title} ({item.type})")
+        return form_id
     else:
         print(f" [✓] Voltooid: Alle elementen voor '{survey_name}' zijn succesvol opgeruimd. Map '{folder_name}' is behouden.")
+        return form_id
 
 def upload_survey(
     gis: arcgis.gis.GIS,
