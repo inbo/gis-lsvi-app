@@ -12,12 +12,12 @@ REM Omdat je in Anaconda Prompt zit, is het simpele commando 'python' voldoende!
 SET SCRIPT_PATH="Q:\Projects\PRJ_GIS\lsvi-app-testing\src\publish_survey.py"
 SET EXCEL_OUTPUT_DIR=Q:\Projects\PRJ_GIS\lsvi-app-testing\output
 
-@REM echo [STAP 1/3] Verwerken van Habitat 1-4...
-@REM python %SCRIPT_PATH% --xlsform-path "%EXCEL_OUTPUT_DIR%\xlsform_hab1-4.xlsx" --target-folder "Survey-LSVI App Test Auto"
-@REM echo.
+echo [STAP 1/3] Verwerken van Habitat 1-4...
+python %SCRIPT_PATH% --xlsform-path "%EXCEL_OUTPUT_DIR%\xlsform_hab1-4.xlsx" --target-folder "Survey-LSVI App Test Auto"
+echo.
 
-@REM echo [STAP 2/3] Verwerken van Habitat 5-7...
-@REM python %SCRIPT_PATH% --xlsform-path "%EXCEL_OUTPUT_DIR%\xlsform_hab5-7.xlsx" --target-folder "Survey-LSVI App Test Auto"
+echo [STAP 2/3] Verwerken van Habitat 5-7...
+python %SCRIPT_PATH% --xlsform-path "%EXCEL_OUTPUT_DIR%\xlsform_hab5-7.xlsx" --target-folder "Survey-LSVI App Test Auto"
 echo.
 
 echo [STAP 3/3] Verwerken van Habitat 9...

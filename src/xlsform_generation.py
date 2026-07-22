@@ -356,29 +356,29 @@ def generate_xlsform(
         for idx, row in df_hab_vereisten.iterrows():
             vraag_naam = f"{row['vraag_id']}"
 
-            # # Add spacing after question
-            # if idx > 0:
-            #     survey_list.append({
-            #         "type": "note",
-            #         "name": f"div_{vraag_naam}",
-            #         # 1. Outer DIV forces exactly 40px of padding above and below
-            #         # 2. Inner DIV draws the 2px line right in the dead-center of that space
-            #         # "label": "<div style='height: 1px; background-color: #31872e; margin: 20px 0; line-height: 0;'></div>",                # "label": "<div style='margin: 25px 0; padding-top: 15px; border-top: 2px solid #31872e; padding-bottom: 15px;'></div>",
-            #         "label": "<div style='background-color: #31872e; height: 1px; font-size: 2px; padding: 0; margin: 3px 0; line-height: 1px;'>&nbsp;</div>",
-            #         "relevant": "",
-            #         "appearance": "",
-            #         "bind::esri:fieldType": "null"
-            #     })
-            #     survey_list.append({
-            #         "type": "note",
-            #         "name": f"div_{vraag_naam}2",
-            #         # 1. Outer DIV forces exactly 40px of padding above and below
-            #         # 2. Inner DIV draws the 2px line right in the dead-center of that space
-            #         "label": "<br>",                # "label": "<div style='margin: 25px 0; padding-top: 15px; border-top: 2px solid #31872e; padding-bottom: 15px;'></div>",
-            #         "relevant": "",
-            #         "appearance": "",
-            #         "bind::esri:fieldType": "null"
-            #     })
+            # Add spacing after question
+            if idx > 0:
+                # survey_list.append({
+                #     "type": "note",
+                #     "name": f"div_{vraag_naam}",
+                #     # 1. Outer DIV forces exactly 40px of padding above and below
+                #     # 2. Inner DIV draws the 2px line right in the dead-center of that space
+                #     # "label": "<div style='height: 1px; background-color: #31872e; margin: 20px 0; line-height: 0;'></div>",                # "label": "<div style='margin: 25px 0; padding-top: 15px; border-top: 2px solid #31872e; padding-bottom: 15px;'></div>",
+                #     "label": "<div style='background-color: #31872e; height: 1px; font-size: 2px; padding: 0; margin: 3px 0; line-height: 1px;'>&nbsp;</div>",
+                #     "relevant": "",
+                #     "appearance": "",
+                #     "bind::esri:fieldType": "null"
+                # })
+                survey_list.append({
+                    "type": "note",
+                    "name": f"div_{vraag_naam}2",
+                    # 1. Outer DIV forces exactly 40px of padding above and below
+                    # 2. Inner DIV draws the 2px line right in the dead-center of that space
+                    "label": "<br>",                # "label": "<div style='margin: 25px 0; padding-top: 15px; border-top: 2px solid #31872e; padding-bottom: 15px;'></div>",
+                    "relevant": "",
+                    "appearance": "",
+                    "bind::esri:fieldType": "null"
+                })
 
             # Type_vraag heeft 3 mogelijkheden: Orig (normaal), Matrixvraag of 'niet nodig in app':
             if row['Type_vraag'].lower() == 'orig':
