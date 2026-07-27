@@ -27,7 +27,7 @@ def generate_xlsform(
     Generate XLSForm survey based on parameters
     """
     ### Load input data
-    df_vereisten = pd.read_excel('./input/LSVI_packageInvoervereisten_uitdb_2026-06-08_aanvullingenLSVI_app.xlsx', sheet_name='LSVI_packageInvoervereisten_uit')
+    df_vereisten = pd.read_excel('./input/LSVI_packageInvoervereisten_uitdb_2026-06-08_aanvullingenLSVI_app_v2.xlsx', sheet_name='LSVI_packageInvoervereisten_uit')
     df_vereisten["Habitattype"] = df_vereisten["Habitattype"].astype(str).str.strip()
     df_vereisten["BeoordelingID"] = df_vereisten["BeoordelingID"].astype(int)
     df_vereisten["TaxongroepId"] = df_vereisten["TaxongroepId"].fillna(-1).astype(int)
@@ -63,7 +63,7 @@ def generate_xlsform(
     df_schalen = pd.read_csv('./input/survey123_schalen.csv', sep=';') # Het bestand van de vorige stap!
 
     # Groepen voor matrixvragen
-    df_groepen = pd.read_excel('./input/LSVI_packageInvoervereisten_uitdb_2026-06-08_aanvullingenLSVI_app.xlsx', sheet_name='Groepen')
+    df_groepen = pd.read_excel('./input/LSVI_packageInvoervereisten_uitdb_2026-06-08_aanvullingenLSVI_app_v2.xlsx', sheet_name='Groepen')
     # 2. Opschonen: Verwijder eventuele onzichtbare spaties aan de randen van de tekst
     df_groepen['Name'] = df_groepen['Name'].astype(str).str.strip()
     df_groepen['Value'] = df_groepen['Value'].astype(str).str.strip()
