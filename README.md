@@ -26,6 +26,7 @@ src/
   ├── publish_survey.py         # Publishes new surveys to AGOL
   ├── update_survey.py          # Updates existing surveys in AGOL
   └── utils.py                  # Shared utilities (KeePass auth, data cleaning)
+  └── give_access.py            # Shares all survey objects (feature layer, form, etc.) with LSVItesters group
 
 input/                           # Data sources
   ├── LSVI_packageInvoervereisten_uitdb_*.xlsx  # Main LSVI requirements (invoervereisten)
@@ -111,9 +112,10 @@ run_upload_survey.bat
 - Publishes new XLSForm files as Survey123 surveys
 - Uploads to AGOL folder: `Survey-LSVI App Test Auto`
 - Creates Feature Layer for data collection
+- Updates field maps webmap and links in popup
 - Requires KeePass authentication
 
-**Use this for:** First-time publication or complete regeneration
+**Use this for:** Publication and updates to surveys.
 
 ### Step 3: Update Surveys in AGOL (Existing Surveys)
 
@@ -128,7 +130,8 @@ run_update_survey.bat
 - Target webmap: `64c1f0bd02344d5ebf41c3dd320615bc`
 - Requires KeePass authentication
 
-**Use this for:** Frequent updates without losing collected data
+**Avoid using this pipeline** because pushing schema updates to very large feature layers is not very stable.
+ 
 
 ## Pipeline Scripts
 
@@ -171,6 +174,16 @@ python src/update_survey.py \
   --webmap-id 64c1f0bd02344d5ebf41c3dd320615bc
 ```
 
+### `give_access.py`
+
+Provides access to all items in a folder, for all members of a specific group.
+
+```bash
+python src/give_access.py \
+  --xlsform output/xlsform_hab1-4.xlsx \
+  --webmap-id 64c1f0bd02344d5ebf41c3dd320615bc
+```
+
 ## Data Flow
 
 1. **Input**: LSVI requirements from external R package export (Excel/CSV)
@@ -202,5 +215,3 @@ python src/update_survey.py \
 ## Next steps
 
 - ETL survey results to DB
-- Decouple results in AGOL feature layer to normalized DB model
-- 
