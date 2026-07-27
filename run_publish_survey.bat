@@ -24,7 +24,7 @@ echo [STAP 3/3] Verwerken van Habitat 9...
 python %SCRIPT_PATH% --xlsform-path "%EXCEL_OUTPUT_DIR%\xlsform_hab9.xlsx" --target-folder "Survey-LSVI App Test Auto"
 
 @REM add parameter --manual_old_survey_id to force the script to use the old survey ID for Habitat 9, in case you manually deleted a form from AGOL.
-@REM python %SCRIPT_PATH% --xlsform-path "%EXCEL_OUTPUT_DIR%\xlsform_hab9.xlsx" --target-folder "Survey-LSVI App Test Auto" --manual_old_survey_id "a637a3e62fec4a6b80d19c5d642607b0"
+@REM python %SCRIPT_PATH% --xlsform-path "%EXCEL_OUTPUT_DIR%\xlsform_hab5-7.xlsx" --target-folder "Survey-LSVI App Test Auto" --manual_old_survey_id "f2093d3120104def9bed75f70bcdebf0"
 
 echo.
 

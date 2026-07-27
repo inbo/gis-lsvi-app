@@ -162,7 +162,7 @@ def generate_xlsform(
 
     # Add user/karteerder
     survey_list.append({
-        "type": "username", "name": "username", "label": "", 
+        "type": "username", "name": "username", "label": "Gebruiker", 
         "default": "current_user()", "relevant": "", "appearance": "", "calculation": ""
     })
 
@@ -497,6 +497,8 @@ def generate_xlsform(
 
                 if items_te_scoren.empty:
                     print(f"Waarschuwing: Geen matrix items gevonden voor groep '{row['Groepen']}' bij vraag {vraag_naam}")
+
+                items_te_scoren.drop_duplicates(inplace=True)
 
                 # 4. Genereer de rijen over de VOLLEDIGE breedte van het scherm
                 for groep_id, group_value in items_te_scoren.itertuples(index=False):

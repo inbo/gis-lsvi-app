@@ -44,18 +44,19 @@ Percentage;75perc;75%
 Percentage;80perc;80%
 Percentage;90perc;90%
 Percentage;100perc;100%
-LSVI;s;s
-LSVI;r;r
-LSVI;o;o
-LSVI;f;f
-LSVI;5_10perc;5-10%
-LSVI;10_20perc;10-20%
-LSVI;20_30perc;20-30%
-LSVI;30_40perc;30-40%
-LSVI;40_50perc;40-50%
-LSVI;50_60perc;50-60%
-LSVI;60_70perc;60-70%
-LSVI;70_80perc;70-80%
-LSVI;80_90perc;80-90%
-LSVI;90_95perc;90-95%
-LSVI;95_100perc;95-100%
+LSVI;afw;afw.
+LSVI;zs;zs (<3 ex.)
+LSVI;s;s (4-10 ex.)
+LSVI;wt;wt (10-50 ex.)
+LSVI;t;t (>50 ex.)
+LSVI;5_10perc;5-10
+LSVI;10_20perc;10-20
+LSVI;20_30perc;20-30
+LSVI;30_40perc;30-40
+LSVI;40_50perc;40-50
+LSVI;50_60perc;50-60
+LSVI;60_70perc;60-70
+LSVI;70_80perc;70-80
+LSVI;80_90perc;80-90
+LSVI;90_95perc;90-95
+LSVI;95_100perc;95-100
