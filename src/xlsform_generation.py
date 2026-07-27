@@ -153,6 +153,12 @@ def generate_xlsform(
         "default": "now()", "relevant": "", "appearance": "", "calculation": ""
     })
 
+    # Add user/karteerder
+    survey_list.append({
+        "type": "username", "name": "username", "label": "", 
+        "default": "current_user()", "relevant": "", "appearance": "", "calculation": ""
+    })
+
     # Locatie: Onzichtbare GPS-bepaling
     survey_list.append({
         "type": "geopoint", "name": "locatie", "label": "Locatie", 

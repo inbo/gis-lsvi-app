@@ -49,7 +49,6 @@ output/                          # Generated artifacts
   - `openpyxl` (Excel handling)
   - `sqlalchemy` (database access)
 - **KeePass**: Local KeePassXC installation with stored AGOL credentials
-- **GDRIVE API Access**: API access required to load invoervereisten from shared GDRIVE. See https://docs.gspread.org/en/latest/oauth2.html#for-end-users-using-oauth-client-id for more info.
 
 ## Setup
 
@@ -76,22 +75,6 @@ Credentials are securely retrieved from KeePassXC:
 
 The pipeline will prompt for your KeePass master password when executing publish/update operations.
 
-### 3. Google Drive API Credentials
-To fetch data from shared Google Drive spreadsheets, you need OAuth 2.0 credentials:
-
-For First-Time Setup:
-- Create OAuth Credentials in Google Cloud Console:
-    - Go to Google Cloud Console - Credentials
-    - Select your project (or create a new one)
-    - Enable Google Drive API and Google Sheets API
-    - Click Create Credentials → OAuth Client ID
-    - Select Desktop application as the application type
-    - Click Create
-
-- Download the Credentials JSON:
-    - Click the Download button (down arrow icon) on the right side
-    - Store in the Correct Location: C:\Users\<YourUsername>\.secrets\google_credentials.json
-    - Create the .secrets folder if it doesn't exist
 
 ## Workflow
 
