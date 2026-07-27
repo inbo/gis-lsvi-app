@@ -67,7 +67,7 @@ def generate_xlsform(
     # 2. Opschonen: Verwijder eventuele onzichtbare spaties aan de randen van de tekst
     df_groepen['Name'] = df_groepen['Name'].astype(str).str.strip()
     df_groepen['Value'] = df_groepen['Value'].astype(str).str.strip()
-    groepen_mapping = df_groepen.groupby('Name')['Value'].apply(list).to_dict()
+    # groepen_mapping = df_groepen.groupby('Name')['Value'].apply(list).to_dict()
 
     # Habitattypes
     # df_habitattypes = pd.read_sql_table('Habitattype', 'sqlite:///./input/LSVIHabitatTypes.sqlite')
@@ -486,18 +486,23 @@ def generate_xlsform(
                     tax_id = row['TaxongroepId']
                     if pd.notna(tax_id):
                         df_sub_soorten = df_soorten[df_soorten['TaxongroepId'] == int(tax_id)]
-                        items_te_scoren = df_sub_soorten['NedNaam'].fillna(df_sub_soorten['WetNaam']).tolist()
+                        items_te_scoren = pd.DataFrame({
+                            'groep_id': df_sub_soorten['Id'],
+                            'Value': df_sub_soorten['NedNaam'].fillna(df_sub_soorten['WetNaam'])
+                        }).reset_index(drop=True)
                 else:
                     raw_groep = str(row['Groepen']).strip()
-                    items_te_scoren = groepen_mapping.get(raw_groep, [])
+                    items_te_scoren = df_groepen[df_groepen['Name'] == raw_groep]
+                    items_te_scoren = items_te_scoren[['groep_id','Value']]
 
-                if not items_te_scoren:
+                if items_te_scoren.empty:
                     print(f"Waarschuwing: Geen matrix items gevonden voor groep '{row['Groepen']}' bij vraag {vraag_naam}")
 
                 # 4. Genereer de rijen over de VOLLEDIGE breedte van het scherm
-                for index, item in enumerate(items_te_scoren):
-                    uniek_veld_name = f"{vraag_naam}_matrix_{index}"
-                    uniek_veld_name = uniek_veld_name[0:27] # Beperkt tot 32 tekens max
+                for groep_id, group_value in items_te_scoren.itertuples(index=False):
+
+                    uniek_veld_name = f"{vraag_naam}_matrix_{groep_id}"
+                    uniek_veld_name = uniek_veld_name[0:30] # Beperkt tot 32 tekens max
 
                     # OPLOSSING VOOR SMALLE SCHERMEN:
                     # - We verwijderen de aparte 'note' rij volledig.
@@ -507,7 +512,7 @@ def generate_xlsform(
                     survey_list.append({
                         "type": "select_one LSVI",
                         "name": uniek_veld_name,
-                        "label": f"{item.capitalize()}", # De soortnaam staat nu groot en leesbaar BOVEN de dropdown
+                        "label": f"{group_value.capitalize()}", # De soortnaam staat nu groot en leesbaar BOVEN de dropdown
                         "relevant": "",
                         "appearance": "minimal" # Volledige breedte dropdown, perfect voor mobiel
                     })
