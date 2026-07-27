@@ -138,8 +138,15 @@ def generate_xlsform(
 
     # Unieke ID: Wordt op de achtergrond gegenereerd (gebruiker ziet dit niet)
     survey_list.append({
-        "type": "calculate", "name": "collectie_id", "label": "", 
-        "calculation": "uuid()", "relevant": "", "appearance": "", "default": ""
+        "type": "calculate", 
+        "name": "collectie_id", 
+        "label": "", 
+        "calculation": "once(uuid())", # 'once()' voorkomt dat het ID verandert tijdens het invullen
+        "bind::esri:fieldType": "esriFieldTypeString", # dwingt de aanmaak van een veld af
+        "bind::esri:fieldLength": "255",
+        "relevant": "", 
+        "appearance": "", 
+        "default": ""
     })
 
     # Datum & Uur: Automatisch ingevuld
