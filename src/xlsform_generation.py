@@ -108,7 +108,13 @@ def generate_xlsform(
             "name": utils.clean_name(hab),
             "label": str(hab).upper()
         })
-        
+
+    choices_list.append({
+        "list_name": "chk_niet_goed_onderzocht",
+        "name": "ja", # Waarde die in de database komt als het is aangevinkt
+        "label": "Niet goed onderzocht" # Tekst die bij het vinkje staat
+    })
+
     df_choices_final = pd.DataFrame(choices_list)
 
     # Zorg dat de talen overeenkomen in survey en choices!
@@ -247,8 +253,9 @@ def generate_xlsform(
         "relevant": "", 
         "appearance": "w1", 
         "calculation": "",
-        "bind::esri:fieldType": "null"
+        "bind::esri:fieldType": "null",
     })
+
     survey_list.append({
         "type": "note", 
         "name": "hdr_phab", 
@@ -582,6 +589,16 @@ def generate_xlsform(
                         "relevant": "", 
                         "appearance": ""
                     })
+
+        # Check box in geval de hele opname snel werd gedaan (niet grondig)
+        survey_list.append({
+                "type": "select_multiple chk_niet_goed_onderzocht", # Verwijst naar de keuzelijst
+                "name": f"niet_grondig_{hab_clean}",
+                "label": "Vink aan indien niet grondig onderzocht:",  # Leeg laten als het label al op de checkbox zelf staat
+                "relevant": "",
+                "appearance": "compact horizontal", # Zorgt voor een strakke weergave zonder extra randen
+                "default": ""  # Leeg laten = Standaard NIET aangevinkt
+            })
 
         # Sluit de groep (Pagina) af
         survey_list.append({

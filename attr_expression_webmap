@@ -19,7 +19,7 @@ var center_x = Round(pt.x, 8);
 var center_y = Round(pt.y, 8);
 
 // // Use id of form item in AGOL
-var baseUrl = "https://survey123.arcgis.app?itemID=6e53ea389e9049c297acb78f51c06a98";
+var baseUrl = "https://survey123.arcgis.app?itemID=<<insert item id of form object here>>";
 var bwk_info = `&field:bwk_plot_id=${bwk_plot_id}&field:bwk_globalid=${bwk_globalid}&field:bwk_centroid_x=${center_x}&field:bwk_centroid_y=${center_y}`;
 var hab_info = `&field:hab1=${hab1}&field:hab2=${hab2}&field:hab3=${hab3}&field:phab1=${phab1}&field:phab2=${phab2}&field:phab3=${phab3}`;
 return baseUrl + bwk_info + hab_info

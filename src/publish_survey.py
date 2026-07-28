@@ -77,7 +77,7 @@ def main():
         )
     
     # Update BWK field map web app item with new form id
-    FIELD_MAP_ID = "ad1a1d268ddf4f02b1bb48f6f1b85f1c"
+    FIELD_MAP_ID = "817ad56c600c45c8a5f70e65fe23ad7c"
 
     # Get the web map's internal data configuration
     map_item = gis.content.get(FIELD_MAP_ID)
