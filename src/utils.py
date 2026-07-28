@@ -242,13 +242,13 @@ def get_question_settings(row):
         answer_type = f"select_multiple taxa_{tax_id}"
         vraag_appearance = "horizontal compact"
     elif type_var == 'meting_perc':
-        answer_type = "select_one Percentage" #to find example and implement joost
+        answer_type = "integer" 
         vraag_appearance = "minimal" 
     elif 'meting' in type_var and type_var != 'meting_perc':
-        answer_type = "decimal" #to find example and implement joost
+        answer_type = "decimal" 
         vraag_appearance = "minimal" 
     elif 'scoresom' in type_var and type_var != 'meting_perc':
-        answer_type = "integer" #to find example and implement joost
+        answer_type = "integer" 
         vraag_appearance = "minimal" 
     else:
         answer_type = "text" # Fallback

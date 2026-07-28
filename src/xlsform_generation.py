@@ -173,6 +173,18 @@ def generate_xlsform(
     })
 
     # BWK questions
+        # Toon BWK ID over hele breedte
+    survey_list.append({
+            "type": "text", 
+            "name": "opmerkingen", 
+            "label": "Opmerkingen", 
+            "default": "", 
+            "relevant": "", 
+            "appearance": "",  # Neemt 5/5 kolommen in, dus over hele rij
+            "calculation": ""
+        })
+
+    # BWK questions
     # Toon BWK ID over hele breedte
     survey_list.append({
         "type": "text", 
@@ -180,7 +192,7 @@ def generate_xlsform(
         "label": "Plot ID", 
         "default": "", 
         "relevant": "", 
-        "appearance": "",  # Neemt 5/5 kolommen in, dus over hele rij
+        "appearance": "hidden",  # Neemt 5/5 kolommen in, dus over hele rij
         "calculation": "", 
         "readonly": "yes"
     })
@@ -191,7 +203,7 @@ def generate_xlsform(
         "label": "Global ID", 
         "default": "", 
         "relevant": "", 
-        "appearance": "",  # Neemt 5/5 kolommen in, dus over hele rij
+        "appearance": "hidden",  # Neemt 5/5 kolommen in, dus over hele rij
         "calculation": "", 
         "readonly": "yes"
     })
