@@ -29,7 +29,7 @@ def generate_xlsform(
     ### Load input data
     df_vereisten = pd.read_excel('./input/LSVI_packageInvoervereisten_uitdb_2026-06-08_aanvullingenLSVI_app_v2.xlsx', sheet_name='LSVI_packageInvoervereisten_uit')
     df_vereisten["Habitattype"] = df_vereisten["Habitattype"].astype(str).str.strip()
-    df_vereisten["Habitatsubtype"] = df_vereisten["Habitattype"].astype(str).str.strip()
+    df_vereisten["Habitatsubtype"] = df_vereisten["Habitatsubtype"].astype(str).str.strip()
     df_vereisten["BeoordelingID"] = df_vereisten["BeoordelingID"].astype(int)
     df_vereisten["TaxongroepId"] = df_vereisten["TaxongroepId"].fillna(-1).astype(int)
     # We should only use vereisten v3
