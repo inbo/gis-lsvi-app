@@ -15,8 +15,8 @@ var phab3 = Lower($feature.PHAB3);
 
 var poly_geom = Geometry($feature);
 var pt = Centroid(poly_geom);
-var center_x = Round(pt.x, 8);
-var center_y = Round(pt.y, 8);
+var center_x = Text(pt.x, '#.00');
+var center_y = Text(pt.y, '#.00');
 
 // // Use id of form item in AGOL
 var baseUrl = "https://survey123.arcgis.app?itemID=<<insert item id of form object here>>";
