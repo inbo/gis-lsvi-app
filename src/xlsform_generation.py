@@ -216,25 +216,27 @@ def generate_xlsform(
     })
 
     survey_list.append({
-        "type": "decimal", 
+        "type": "text", # input interface should accept it as text, so decimal numbers don't get parsed using different locale settings
         "name": "bwk_centroid_x", 
         "label": "BWK Centroid X", 
         "default": "", 
         "relevant": "", 
         "appearance": "hidden",  # Neemt 5/5 kolommen in, dus over hele rij
         "calculation": "", 
-        "readonly": "yes"
+        "readonly": "yes",
+        "bind::esri:fieldType": "esriFieldTypeDouble" # Keeps feature layer field as Double
     })
 
     survey_list.append({
-        "type": "decimal", 
+        "type": "text",  # input interface should accept it as text, so decimal numbers don't get parsed using different locale settings
         "name": "bwk_centroid_y", 
         "label": "BWK Centroid Y", 
         "default": "", 
         "relevant": "", 
         "appearance": "hidden",  # Neemt 5/5 kolommen in, dus over hele rij
         "calculation": "", 
-        "readonly": "yes"
+        "readonly": "yes",
+        "bind::esri:fieldType": "esriFieldTypeDouble" # Keeps feature layer field as Double
     })
 
     # Maak grid aan voor hab and phab velden weer te geven
