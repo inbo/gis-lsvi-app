@@ -8,3 +8,5 @@ gis/
 documentatie/
 
 __pycache__/
+
+output/
