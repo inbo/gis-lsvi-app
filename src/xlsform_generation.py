@@ -302,33 +302,38 @@ def generate_xlsform(
 
     ### Questions per habitat
     # Trigger vraag
-    survey_list.append({
-        "type": "select_one Ja_Nee", "name": "lsvi_opstellen", "label": "LSVI Opstellen?", 
-        "relevant": "", "appearance": "horizontal", "default": "", "calculation": ""
-    })
+    # survey_list.append({
+    #     "type": "select_one Ja_Nee", "name": "lsvi_opstellen", "label": "LSVI Opstellen?", 
+    #     "relevant": "", "appearance": "horizontal", "default": "", "calculation": ""
+    # })
 
     # Groepeer alle LSVI vragen zodat we de 'relevant' logica maar 1 keer hoeven te typen
     survey_list.append({
-        "type": "begin group", "name": "grp_lsvi", "label": "LSVI Gegevens", 
+        "type": "begin group", "name": "grp_lsvi", "label": "LSVI Survey", 
         "relevant": "${lsvi_opstellen} = 'ja'", # Zichtbaar als vorige vraag 'ja' is
         "appearance": "field-list", "default": "", "calculation": ""
     })
 
     # Eerste hoofdvraag: Welk habitattype?
-    survey_list.append({
-        "type": "select_multiple lijst_subhabitats",
-        "name": "habitat_keuze",
-        "label": "Welk habitat(sub)type wil je inventariseren?",
-        "relevant": "",  # Altijd zichtbaar
-        "appearance": "horizontal", #blank defaults to radio buttons instead of "minimal autocomplete",
-        "choice_filter": "string(name) = string(${hab1}) or string(name) = string(${hab2}) or string(name) = string(${hab3})" # This makes sure we only get to choose habitats that were mapped in BWK field app for this polygon.
-    })
-
-
+    # survey_list.append({
+    #     "type": "select_multiple lijst_subhabitats",
+    #     "name": "habitat_keuze",
+    #     "label": "Welk habitat(sub)type wil je inventariseren?",
+    #     "relevant": "",  # Altijd zichtbaar
+    #     "appearance": "horizontal", #blank defaults to radio buttons instead of "minimal autocomplete",
+    #     "choice_filter": "string(name) = string(${hab1}) or string(name) = string(${hab2}) or string(name) = string(${hab3})" # This makes sure we only get to choose habitats that were mapped in BWK field app for this polygon.
+    # })
 
     # 4.2. Loop door de unieke habitattypes (Creëer "Pages" / Groups)
     for hab in unieke_subhabitats:
         hab_clean = utils.clean_name(hab)
+
+        # Check if hab_clean is in hab1, hab2, or hab3 before creating the repeat block
+        rel_expression = (
+            f"string(${{hab1}}) = '{hab_clean}' or "
+            f"string(${{hab2}}) = '{hab_clean}' or "
+            f"string(${{hab3}}) = '{hab_clean}'"
+        )
 
         # Vragen per habitattype
         # Begin de groep voor dit specifieke habitattype. 
@@ -338,8 +343,8 @@ def generate_xlsform(
             "name": f"grp_habitat_{hab_clean}",
             "label": f"Habitat {hab_clean.upper()}",
             # "hint": utils.get_habitat_hint(hab),
-            "relevant": f"selected(string(${{habitat_keuze}}), '{hab_clean}')",   # De groep erft de relevantie van het repeat blok. Dit mag leeg zijn als we repeats gebruiken.
-            "appearance": "field-list" # Zorgt dat het als 1 pagina toont in de app
+            "relevant": rel_expression, # De groep erft de relevantie van het repeat blok. Dit mag leeg zijn als we repeats gebruiken.
+            "appearance": "compact" # Zorgt dat het als 1 pagina toont in de app
         })
 
         # Filter de vereisten voor dít specifieke habitattype
