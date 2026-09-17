@@ -9,4 +9,8 @@ documentatie/
 
 __pycache__/
 
-output/
+# Ignore contents of output, but track 3 specific XLSForm files
+output/*
+!output/xlsform_hab1-4.xlsx
+!output/xlsform_hab5-7.xlsx
+!output/xlsform_hab9.xlsx

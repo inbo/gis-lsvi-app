@@ -56,6 +56,16 @@ def generate_xlsform(
     # Haal beschrijving op uit LSVI databank (mimic functie geefInfoHabitatfiche)
     df_vereisten = utils.voeg_lsvi_beschrijving_toe(df_vereisten, sqlite_path=SQLITE_PATH)
 
+    # Improve order of questions (logical flow field work)
+    # Within one habitat, follow this order for criterium
+    criterium_order = ['Vegetatie', 'Structuur', 'Verstoring']
+    df_vereisten['Criterium'] = pd.Categorical(
+        df_vereisten['Criterium'], 
+        categories=criterium_order, 
+        ordered=True
+    )
+    df_vereisten.sort_values(by=['Habitattype', 'Habitatsubtype', 'Criterium', 'VoorwaardeID'], ascending=True, inplace=True)
+
     print(df_vereisten.shape)
 
     print("Aantal unieke schaal in de vereisten:", df_vereisten['schaal_type'].unique())
@@ -299,78 +309,41 @@ def generate_xlsform(
         "type": "end group", "name": "", "label": "", "relevant": "", "appearance": ""
     })
 
-    # ########################################
-    # ### SAMPLE OF TABLE LIST MATRIX QUESTION JOOST TO REMOVE LATER
-    # ########################################
-    # # Add sample hardcoded table list matrixquestion so Toon en Johannes can test if width is enough
-    # survey_list.append({
-    #                 "type": "begin group",
-    #                 "name": f"test_matrix",
-    #                 "label": "Deze vraag dient enkel als voorbeeld van matrixgrid. Is er genoeg ruimte om het juiste antwoord aan te duiden?", # Genereert jouw mooie HTML label
-    #                 "hint": np.nan,
-    #                 "relevant": "",
-    #                 "appearance": "table-list" # <-- GEWIJZIGD: Verander 'w2 grid-layout' naar 'table-list'
-    #             })
-
-    # # Welke groep moeten we bevragen in matrix?
-    # groep_naam = 'lsvi'
-    # items_te_scoren = []
-    # tax_id = 1
-    # if pd.notna(tax_id):
-    #     df_sub_soorten = df_soorten[df_soorten['TaxongroepId'] == int(tax_id)]
-    #     items_te_scoren = df_sub_soorten['NedNaam'].fillna(df_sub_soorten['WetNaam']).tolist()
-                
-    # # 2. Genereer de matrix rijen
-    # # Binnen een 'table-list' groep hoef je GEEN 'notes' toe te voegen voor de labels!
-    # for index, item in enumerate(items_te_scoren):
-    #     uniek_veld_name = f"test_matrix_{index}"
-
-    #     survey_list.append({
-    #         "type": "select_one LSVI", # Zorg dat al deze vragen exact dezelfde keuzelijst delen!
-    #         "name": uniek_veld_name,
-    #         "label": f"{item.capitalize()}", 
-    #         "relevant": "",
-    #         "appearance": "" 
-    #     })
-
-    # # 3. Sluit de matrix sub-groep netjes af
-    # survey_list.append({
-    #     "type": "end group", "name": "", "label": "", "relevant": "", "appearance": ""
-    # })
-
-    # #########################################
-    # ### END OF BLOCK TO DELETE LATER
-    # ########################################
 
     ### Questions per habitat
     # Trigger vraag
-    survey_list.append({
-        "type": "select_one Ja_Nee", "name": "lsvi_opstellen", "label": "LSVI Opstellen?", 
-        "relevant": "", "appearance": "horizontal", "default": "", "calculation": ""
-    })
+    # survey_list.append({
+    #     "type": "select_one Ja_Nee", "name": "lsvi_opstellen", "label": "LSVI Opstellen?", 
+    #     "relevant": "", "appearance": "horizontal", "default": "", "calculation": ""
+    # })
 
     # Groepeer alle LSVI vragen zodat we de 'relevant' logica maar 1 keer hoeven te typen
     survey_list.append({
-        "type": "begin group", "name": "grp_lsvi", "label": "LSVI Gegevens", 
-        "relevant": "${lsvi_opstellen} = 'ja'", # Zichtbaar als vorige vraag 'ja' is
+        "type": "begin group", "name": "grp_lsvi", "label": "LSVI Survey", 
+        # "relevant": "${lsvi_opstellen} = 'ja'", # Zichtbaar als vorige vraag 'ja' is
         "appearance": "field-list", "default": "", "calculation": ""
     })
 
     # Eerste hoofdvraag: Welk habitattype?
-    survey_list.append({
-        "type": "select_multiple lijst_subhabitats",
-        "name": "habitat_keuze",
-        "label": "Welk habitat(sub)type wil je inventariseren?",
-        "relevant": "",  # Altijd zichtbaar
-        "appearance": "horizontal", #blank defaults to radio buttons instead of "minimal autocomplete",
-        "choice_filter": "string(name) = string(${hab1}) or string(name) = string(${hab2}) or string(name) = string(${hab3})" # This makes sure we only get to choose habitats that were mapped in BWK field app for this polygon.
-    })
-
-
+    # survey_list.append({
+    #     "type": "select_multiple lijst_subhabitats",
+    #     "name": "habitat_keuze",
+    #     "label": "Welk habitat(sub)type wil je inventariseren?",
+    #     "relevant": "",  # Altijd zichtbaar
+    #     "appearance": "horizontal", #blank defaults to radio buttons instead of "minimal autocomplete",
+    #     "choice_filter": "string(name) = string(${hab1}) or string(name) = string(${hab2}) or string(name) = string(${hab3})" # This makes sure we only get to choose habitats that were mapped in BWK field app for this polygon.
+    # })
 
     # 4.2. Loop door de unieke habitattypes (Creëer "Pages" / Groups)
     for hab in unieke_subhabitats:
         hab_clean = utils.clean_name(hab)
+
+        # Check if hab_clean is in hab1, hab2, or hab3 before creating the repeat block
+        rel_expression = (
+            f"string(${{hab1}}) = '{hab_clean}' or "
+            f"string(${{hab2}}) = '{hab_clean}' or "
+            f"string(${{hab3}}) = '{hab_clean}'"
+        )
 
         # Vragen per habitattype
         # Begin de groep voor dit specifieke habitattype. 
@@ -380,8 +353,8 @@ def generate_xlsform(
             "name": f"grp_habitat_{hab_clean}",
             "label": f"Habitat {hab_clean.upper()}",
             # "hint": utils.get_habitat_hint(hab),
-            "relevant": f"selected(string(${{habitat_keuze}}), '{hab_clean}')",   # De groep erft de relevantie van het repeat blok. Dit mag leeg zijn als we repeats gebruiken.
-            "appearance": "field-list" # Zorgt dat het als 1 pagina toont in de app
+            "relevant": rel_expression, # De groep erft de relevantie van het repeat blok. Dit mag leeg zijn als we repeats gebruiken.
+            "appearance": "compact" # Zorgt dat het als 1 pagina toont in de app
         })
 
         # Filter de vereisten voor dít specifieke habitattype
