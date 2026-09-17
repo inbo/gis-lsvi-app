@@ -79,7 +79,7 @@ The pipeline will prompt for your KeePass master password when executing publish
 
 ## Workflow
 
-Make sure to run from anaconda prompt.
+Make sure to run from anaconda prompt in the correct conda environment.
 Navigate: cd /d Q:\Projects\PRJ_GIS\lsvi-app-testing
 
 ### Step 1: Generate XLSForm from LSVI Data

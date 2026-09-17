@@ -176,10 +176,20 @@ def get_question_label(vereiste):
     if pd.notna(vereiste['Eenheid']) and str(vereiste['Eenheid']).strip() != "":
         eenheid = f" ({vereiste['Eenheid']})" # Plaats het tussen haakjes, of pas aan naar wens
 
+    # Verwerk belang van indicator
+    belang_prefix = ""
+    if pd.notna(vereiste.get('Belang')):
+        belang_val = str(vereiste['Belang']).strip().lower()
+        if belang_val == 'zb':
+            belang_prefix = "<span style='color: red; font-weight: bold;'>[ZEER BELANGRIJK]</span><br>"
+        elif belang_val == 'b':
+            belang_prefix = "<b>[Belangrijk]</b><br>"
+            
     # 3. Bouw de HTML-geformatteerde string op
     # Let op: <br> zorgt voor een nieuwe regel in Survey123
     # We force non-bold text for the values in case the question label is the group label
     html_label = (
+        f"{belang_prefix}"
         f"<b>Indicator:</b> <span style='font-weight: normal;'>{indicator}</span><br>"
         f"<b>Voorwaarde:</b> <span style='font-weight: normal;'>{voorwaarde}{eenheid}</span><br>"
         f"<b>Beoordeling:</b> <span style='font-weight: normal;'><i>{beoordeling}</i></span><br>"
