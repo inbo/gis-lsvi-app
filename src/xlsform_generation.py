@@ -310,7 +310,7 @@ def generate_xlsform(
     # Groepeer alle LSVI vragen zodat we de 'relevant' logica maar 1 keer hoeven te typen
     survey_list.append({
         "type": "begin group", "name": "grp_lsvi", "label": "LSVI Survey", 
-        "relevant": "${lsvi_opstellen} = 'ja'", # Zichtbaar als vorige vraag 'ja' is
+        # "relevant": "${lsvi_opstellen} = 'ja'", # Zichtbaar als vorige vraag 'ja' is
         "appearance": "field-list", "default": "", "calculation": ""
     })
 
