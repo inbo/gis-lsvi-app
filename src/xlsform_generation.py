@@ -393,8 +393,10 @@ def generate_xlsform(
                 # Do usual processing
                 answer_type, vraag_appearance = utils.get_question_settings(row)
 
-                # Controleer of er een beschrijving is
-                # heeft_beschrijving = pd.notna(row['Beschrijving']) and str(row['Beschrijving']).strip() != ""
+                # Check if 'Belang' is 'zb' (Zeer Belangrijk) to make the field mandatory
+                is_required = "no"
+                if pd.notna(row.get('Belang')) and str(row['Belang']).strip().lower() == 'zb':
+                    is_required = "yes"
 
                 # Vraag toevoegen
                 # Label van de vraag is combinatie van Voorwaarde + Indicator + Beoordeling(en eventueel Eenheid)
@@ -404,7 +406,8 @@ def generate_xlsform(
                     "name": vraag_naam,
                     "label": utils.get_question_label(row), # De vraag die de gebruiker ziet
                     "relevant": "",
-                    "appearance": vraag_appearance
+                    "appearance": vraag_appearance,
+                    "required": is_required
                 })
 
                 # Toevoegen beschrijving indicator
@@ -431,12 +434,17 @@ def generate_xlsform(
 
                     # Sluit de groep netjes af
                     survey_list.append({
-                        "type": "end group", "name": "", "label": np.nan, "relevant": "", "appearance": ""
+                        "type": "end group", "name": f"besch_{vraag_naam}", "label": np.nan, "relevant": "", "appearance": ""
                     })
 
             elif row['Type_vraag'].lower() == 'matrixvraag':
                 vraag_naam = f"{row['vraag_id']}"
-                
+
+                # Check if 'Belang' is 'zb' (Zeer Belangrijk) to make the field mandatory
+                is_required = "no"
+                if pd.notna(row.get('Belang')) and str(row['Belang']).strip().lower() == 'zb':
+                    is_required = "yes"
+    
                 # 1. Start de matrix hoofdgroep met 'field-list' (verticale stapeling over 100% breedte)
                 survey_list.append({
                     "type": "begin group",
@@ -444,7 +452,8 @@ def generate_xlsform(
                     "label": utils.get_question_label(row), # Jouw mooie HTML hoofdlabel
                     "hint": "Scoor elk van de onderstaande onderdelen volgens de LSVI-schaal.",
                     "relevant": "",
-                    "appearance": "field-list" # <-- GEWIJZIGD: field-list stapt af van het krappe grid
+                    "appearance": "field-list", # <-- GEWIJZIGD: field-list stapt af van het krappe grid
+                    "required": is_required
                 })
 
                 # 2. VOEG DE INKLAPBARE INDICATOR-BESCHRIJVING TOE (Bovenin de groep)
@@ -470,7 +479,7 @@ def generate_xlsform(
 
                     # Sluit de inklapbare subgroep
                     survey_list.append({
-                        "type": "end group", "name": "", "label": "", "relevant": "", "appearance": ""
+                        "type": "end group", "name": f"grp_besch_{vraag_naam}", "label": "", "relevant": "", "appearance": ""
                     })
 
                 # 3. Welke groep moeten we bevragen? (Sleutelsoorten of vaste mapping)

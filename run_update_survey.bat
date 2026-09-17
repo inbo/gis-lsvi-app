@@ -16,14 +16,14 @@ set XLSFORM_PATH3="Q:\Projects\PRJ_GIS\lsvi-app-testing\output\xlsform_hab9.xlsx
 
 
 echo [STAP 1/3] Updaten survey voor Habitat 1-4...
-python %SCRIPT_PATH% --xlsform "%XLSFORM_PATH1%" --webmap-id "64c1f0bd02344d5ebf41c3dd320615bc"
+python %SCRIPT_PATH% --xlsform "%XLSFORM_PATH1%" --webmap-id "817ad56c600c45c8a5f70e65fe23ad7c"
 echo.
 
 echo [STAP 2/3] Updaten survey voor Habitat 5-7...
-python %SCRIPT_PATH% --xlsform "%XLSFORM_PATH2%" --webmap-id "64c1f0bd02344d5ebf41c3dd320615bc"
+python %SCRIPT_PATH% --xlsform "%XLSFORM_PATH2%" --webmap-id "817ad56c600c45c8a5f70e65fe23ad7c"
 echo.
 echo [STAP 3/3] Updaten survey voor Habitat 9...
-python %SCRIPT_PATH% --xlsform "%XLSFORM_PATH3%" --webmap-id "64c1f0bd02344d5ebf41c3dd320615bc"
+python %SCRIPT_PATH% --xlsform "%XLSFORM_PATH3%" --webmap-id "817ad56c600c45c8a5f70e65fe23ad7c"
 echo.
 
 echo ===================
