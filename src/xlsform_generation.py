@@ -56,6 +56,16 @@ def generate_xlsform(
     # Haal beschrijving op uit LSVI databank (mimic functie geefInfoHabitatfiche)
     df_vereisten = utils.voeg_lsvi_beschrijving_toe(df_vereisten, sqlite_path=SQLITE_PATH)
 
+    # Improve order of questions (logical flow field work)
+    # Within one habitat, follow this order for criterium
+    criterium_order = ['Vegetatie', 'Structuur', 'Verstoring']
+    df_vereisten['Criterium'] = pd.Categorical(
+        df_vereisten['Criterium'], 
+        categories=criterium_order, 
+        ordered=True
+    )
+    df_vereisten.sort_values(by=['Habitattype', 'Habitatsubtype', 'Criterium', 'VoorwaardeID'], ascending=True, inplace=True)
+
     print(df_vereisten.shape)
 
     print("Aantal unieke schaal in de vereisten:", df_vereisten['schaal_type'].unique())
